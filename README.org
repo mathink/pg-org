@@ -1,0 +1,42 @@
+#+TITLE: PG-Org mode: interactive proof and documentation
+#+AUTHOR: mathink
+#+DATE: 2014/12/4 1:51:39
+
+* なにこれ
+
+  [[http://orgmode.org/ja/][Org-mode]] でテキストを書きながら [[http://proofgeneral.inf.ed.ac.uk/][Proof General]] みたいに [[https://coq.inria.fr/][Coq]] コード書いて評価! をしたいなぁと思った結果生まれた Org-mode を拡張したような感じのそれです。
+
+  特に、証明中のゴールとかをぽんぽんと挿入したいなぁと思っていたので、そんな機能も入っています。
+
+  あまり重いコードには使わない方が幸せだと思います(私は試していません)。
+
+* 使い方
+
+  1. ProofGeneral を使えるようにしておく。
+  2. Org-mode も使えるようにしておく。
+  3. a. =pg-org.el= をパスの通る場所に置いて =(load "pg-org.el")= しておく。
+     b. =pg-org.org= を =org-babel-load-file= で読み込む。
+  4.  =auto-mode-alist= とか使って =pg-org-mode= と何かを関連付けておくとよい。
+
+** 設定例
+
+   なんとなく =.vorg= って拡張子を使ってます。
+
+#+BEGIN_SRC emacs-lisp
+(load "pg-org")
+(add-to-list 'auto-mode-alist '("\\.vorg$" . pg-org-mode))
+#+END_SRC   
+
+** キーバインド
+
+   =org-mode= の派生モードなので、 =org-mode= で使える機能は(多分)使えます。
+   肝はやっぱエクスポートかなー。
+
+   =pg-org-mode= には現時点で五つの機能があり、それぞれにキーバインドが設定してあります。
+
+   - =C-c C-<return>= :: 現在のカーソルがあるソースブロックまでを評価。
+   - =C-c C-n= :: これまでに評価してきたソースブロックたちの、次の一つを評価。
+   - =C-c C-u= :: ソースブロックの評価を一つ戻す(実態は、一つ前のソースブロックまでの評価)。
+   - =C-c C-;= :: 直前の評価結果を =EXAMPLE= ブロックとして挿入(=#+BEGIN_EXAMPLE ... #+END_EXAMPLE= で囲われる)。
+   - =C-c C-x= :: 問答無用で評価中止。気を付けよう。
+
