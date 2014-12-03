@@ -1,6 +1,6 @@
 #+TITLE: PG-Org mode: interactive proof and documentation
 #+AUTHOR: mathink
-#+DATE: 2014/12/4 1:51:39
+#+DATE: 2014/12/4 2:0:46
 
 * なにこれ
 
@@ -10,13 +10,20 @@
 
   あまり重いコードには使わない方が幸せだと思います(私は試していません)。
 
+  *ちょっと変なことするとすぐにめんどくさくなるので、何かあったら =C-c C-x= するのがいいと思うよ。*
+
 * 使い方
 
   1. ProofGeneral を使えるようにしておく。
   2. Org-mode も使えるようにしておく。
-  3. a. =pg-org.el= をパスの通る場所に置いて =(load "pg-org.el")= しておく。
-     b. =pg-org.org= を =org-babel-load-file= で読み込む。
+  3. a. =pg-org.org= を =org-babel-load-file= で読み込む。
+
+     b. =pg-org.el= をパスの通る場所に置いて =(load "pg-org.el")= しておく。
   4.  =auto-mode-alist= とか使って =pg-org-mode= と何かを関連付けておくとよい。
+
+  個人的には =org-babel= 推しです。
+  この場合、一般的には =.el= はリポジトリに含めないと思うのですが、
+  なんとなく入れてあります。
 
 ** 設定例
 
