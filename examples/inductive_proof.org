@@ -1,0 +1,393 @@
+#+TITLE: 帰納法による証明の過程という体のデモ
+#+AUTHOR: mathink
+#+DATE: 2014/12/5 0:25:6
+
+ただひたすらに
+
+=C-c C-n= を叩き続ける。
+
+それだけで、いいんだよ。
+
+* 準備：インポートとか。
+  
+  せっかくなので、帰納法による証明の過程を追う文書を作ってみよう。
+  
+  なので、必要なものをインポートしたり、引数に関する設定をしたり。
+
+** 引数に関する設定
+
+   いつもこうしてるので、もはやおまじないって雰囲気がする。
+
+   #+BEGIN_SRC coq
+     Set Implicit Arguments.
+     Unset Strict Implicit.
+   #+END_SRC
+
+   いい感じに引数の省略ができたりするようになります。いい感じに。
+
+
+** リストモジュール
+
+   リストに関する帰納法かなーと考えているので =List= モジュールをインポートします。
+
+   #+BEGIN_SRC coq
+     Require Import List.
+     Import ListNotations.
+   #+END_SRC
+
+   こうやって =List= のあとに =ListNotations= をインポートすると、
+
+   #+BEGIN_SRC coq
+     Let pi: list nat := [ 3; 1; 4; 1; 5; 9; 2].
+   #+END_SRC
+
+   という記法が使えるようになります。便利。
+   
+* 定義は。
+
+  どんな例題を扱うかについてノープランでこの文書を書いているのですが、
+  今、ふとリストの反転関数のことが頭に浮かんだので、これを例に取りたいと思います。
+
+** 反転関数 =rev=
+
+   反転関数は再帰関数として定義できます。
+
+   #+BEGIN_SRC coq
+     Fixpoint rev (A: Type)(l: list A): list A :=
+       match l with
+         | [] => []
+         | x::xs => rev xs ++ [x]
+       end.
+   #+END_SRC
+
+   補助関数を利用する定義の仕方もありますが、ここではこの定義で進めます。
+
+** 計算してみる。そして結果。
+
+   正しく定義できてるのか確かめてみましょう。
+   さっき、一つリストを定義したのでそれを使って
+   #+BEGIN_SRC coq
+     Compute (rev pi).
+   #+END_SRC
+   と計算してみると次の出力が得られます。
+   #+BEGIN_EXAMPLE
+     = [2; 9; 5; 1; 4; 1; 3]
+     : list nat
+   #+END_EXAMPLE
+
+   元の =pi= と比べると、ちゃんと反転されているのがわかりますね。
+
+* 定理証明、はじめました。
+
+  たった一つの例について確かめただけじゃあ検証なんて言えませんね。
+  証明しましょう。
+
+  そして、こういうとき一番頭を悩ませるのは「何を示せばいいのか？」という問題なんですが、
+  このあたりは本題と違うので深く考えないでおきましょう。めんどいよ。
+
+** involutive か idempotent かで毎回悩むんだよね。
+
+   反転関数には色々な性質が期待されてますが[fn:rev_property]、今回は次の性質を示すことにします。
+
+   #+BEGIN_SRC coq
+    Theorem rev_rev_id:
+      forall (A: Type)(l: list A),
+        rev (rev l) = l.
+   #+END_SRC
+
+   二回反転させたら元に戻る、という性質です。
+   
+   あぁそうだ、これは余談なんですが =rev_rev= って「レブレブ」って読めるじゃないですか。
+   なんかイラッとしませんかこの響き。
+
+** 証明モードです。
+
+   一応これは =pg-org-mode= の使用例なので、説明をしておく必要がありますね。
+   さっき書いた定理のところまで =C-c C-<return>= で評価しているので、
+   今は既に証明モードに入っていて、傍らにゴールを表示しながらこのテキストを書いています。
+
+   読んでる人にはなんのこっちゃいという話ですね。そういう場合でも =C-c C-;= で
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 22)
+  
+  ============================
+   forall (A : Type) (l : list A), rev (rev l) = l
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   こんな風にゴールを簡単に挿入できるので、文書が書きやすくていいなぁ、
+   というのが =pg-org-mode= の機能の一つです。
+
+   コピペするの面倒。
+
+** ながら対話的証明
+   
+   =pg-org-mode= は既存の =Coq= コードについてドキュメンテーションすることも目的の一つではあるんですが、
+   最初から文書ベースで構成していくスタイルでより効果を発揮するんじゃないかな、と思います。
+
+   「文書を書きながら、例示コードの検証も行なう」というのは、お題目としてはなかなかいいこと言ってるっぽいですねー。
+
+   というわけで今書いているこのタイミングで証明を進めていくわけです。
+   ゴールは先程お見せした通りなので、まずは =intro= でもしてみますか。
+
+   #+BEGIN_SRC coq
+     Proof.
+       intros A l.
+   #+END_SRC
+
+   =intros= でしたすみません。今のゴールは
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 24)
+  
+  A : Type
+  l : list A
+  ============================
+   rev (rev l) = l
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   こうなってます。
+   
+   この文書からわかるはずもないのですが、
+   編集中はこのファイル(の変換元)を表示するバッファの横に ProofGeneral よろしく
+   ゴールが表示されているので、かなり証明してる感が出ます[fn:pg]。
+
+** とっとと証明。
+
+   あくまで例示用の文書なんで =pg-org-mode= に触れるのはこのくらいでいいっすかね。
+   証明の続きやりましょう。
+
+   今のゴールを見てまず浮かぶもの、帰納法ですね。やりましょう。
+   #+BEGIN_SRC coq
+     induction l as [| x xs IHl].
+   #+END_SRC
+   とすると二つのゴールが生成されます。
+   #+BEGIN_EXAMPLE
+2 subgoals, subgoal 1 (ID 27)
+  
+  A : Type
+  ============================
+   rev (rev []) = []
+
+subgoal 2 (ID 31) is:
+ rev (rev (x :: xs)) = x :: xs
+
+(dependent evars:)
+   #+END_EXAMPLE
+   もちろん挿入可能。むしろ一つずつ個別に挿入する方が難しいね。
+   
+   #+BEGIN_SRC coq
+     simpl; reflexivity.
+   #+END_SRC
+   で、最初のゴールは簡単。
+   
+   =pg-org-mode= 使ってる場合、あまり bullet は使わないかもしれない。
+   bullet 使うと、サブゴールを解いたときに「解けたよ! 残りはこれな!」
+   っていう表示が出るので、こういう文書を書いているときにはちょっと冗長。
+
+   で、bullet 使わないでおけば一つサブゴールを解いたらすぐに次のサブゴールが表示されるので
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 31)
+  
+  A : Type
+  x : A
+  xs : list A
+  IHl : rev (rev xs) = xs
+  ============================
+   rev (rev (x :: xs)) = x :: xs
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   こうなります。
+
+   とりあえず
+   #+BEGIN_SRC coq
+   simpl.
+   #+END_SRC
+   しとけば
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 34)
+  
+  A : Type
+  x : A
+  xs : list A
+  IHl : rev (rev xs) = xs
+  ============================
+   rev (rev xs ++ [x]) = x :: xs
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   となるので帰納法の仮定が使え
+   #+BEGIN_SRC coq
+     Fail rewrite IHl.
+   #+END_SRC
+   #+BEGIN_EXAMPLE
+The command has indeed failed with message:
+=> Error: Found no subterm matching "rev (rev xs)" in the current goal.
+   #+END_EXAMPLE
+   ないですね[fn:fail]。
+
+** 補題の居場所
+
+   ざっくり説明をすっ飛ばしましょう。次の補題があればいいですね。
+
+   #+BEGIN_SRC coq
+     Lemma rev_app:
+       forall (A: Type)(l1 l2: list A),
+         rev (l1 ++ l2) = rev l2 ++ rev l1.
+   #+END_SRC
+
+   そう、補題です。これから証明しましょう。
+
+   注意すべき点は、証明モード中で補題の証明に取りかかっているところでしょうか。
+
+   普通に(?) Coq を使っていると一旦証明を始める前まで戻って定理を書く前に補題を示す、
+   というやり方をする人が多いと思います。
+   証明モード中で別の証明に移るのはせいぜい =assert= とか使うときくらいですかね。
+
+   =pg-org= の場合だと主役は文書なので、
+   名前付きの補題を証明モード中で示していく流れは不自然ではないと思います。
+
+   さて、補題は補題らしくちゃちゃっと解いてしまいましょう(反例：米田)。
+   #+BEGIN_SRC coq
+     Proof.
+       intros A l1 l2; induction l1 as [| x xs IHl];
+       simpl; try (rewrite app_nil_r; reflexivity).
+   #+END_SRC
+
+   はい、帰納法のベースケースはもうありません。
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 55)
+  
+  A : Type
+  x : A
+  xs : list A
+  l2 : list A
+  IHl : rev (xs ++ l2) = rev l2 ++ rev xs
+  ============================
+   rev (xs ++ l2) ++ [x] = rev l2 ++ rev xs ++ [x]
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   
+   残りも
+   #+BEGIN_SRC coq
+     rewrite IHl, app_assoc; reflexivity.
+   #+END_SRC
+   で終わりました。
+   #+BEGIN_EXAMPLE
+No more subgoals.
+
+(dependent evars:)
+   #+END_EXAMPLE
+   
+   証明を終えたらちゃんと閉じておきましょう。
+   #+BEGIN_SRC coq
+   Qed.
+   #+END_SRC
+
+   これ、一々書いて評価する必要あるのですよね。
+   なんか上手い方法で楽に処理したいものです。
+
+** 終わりの証明。
+   
+   補題の証明に取りかかる前のゴールをもう一度見返しましょう。
+   
+   あ、上にスクロールするのもいいですが
+   #+BEGIN_SRC coq
+   Show.
+   #+END_SRC
+   すると
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 34)
+  
+  A : Type
+  x : A
+  xs : list A
+  IHl : rev (rev xs) = xs
+  ============================
+   rev (rev xs ++ [x]) = x :: xs
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   ってなるので、こちらもおすすめです。
+   読む側としてはコピペと大差ないのですが、
+   書きながらだと =Show.= を挟んだ方が楽ですね[fn:show]
+
+   では証明の続き。
+   #+BEGIN_SRC coq
+     rewrite rev_app.
+   #+END_SRC
+   というように補題を早速使いますとゴールが
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 65)
+  
+  A : Type
+  x : A
+  xs : list A
+  IHl : rev (rev xs) = xs
+  ============================
+   rev [x] ++ rev (rev xs) = x :: xs
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   となりますので、
+   #+BEGIN_SRC coq
+     rewrite IHl; simpl.
+   #+END_SRC
+   やっと帰納法が使えます。
+   ついでに =simpl= しておきましたので、ゴールは
+   #+BEGIN_EXAMPLE
+1 subgoals, subgoal 1 (ID 67)
+  
+  A : Type
+  x : A
+  xs : list A
+  IHl : rev (rev xs) = xs
+  ============================
+   x :: xs = x :: xs
+
+
+(dependent evars:)
+   #+END_EXAMPLE
+   となります。
+   #+BEGIN_SRC coq
+     reflexivity. Qed.
+   #+END_SRC
+   はい終わり。
+
+   やった! 反転関数の性質を Org-mode で文書を書きながら証明できたぞ!!
+
+* m(a&e)
+
+  以上、普通に文書として読むと出来があまりにも酷いものとなっておりますが、
+  そこは本題ではありませんので気にしないように。
+
+  ま、そりゃそうさ、頭使って書いてないからね!
+
+  
+  =pg-org= は、Coq についてコードを交えながら文書を書きたいけど
+  一々別ファイルに用意したりコピペしたりとかめんどいよー、
+  勢いのままに書きながらコードについては正しいものを挿れたいよー、
+  という +ものぐさな+ 方におすすめです。
+
+  ちなみに、[[./inductive_proof.v][このファイルから Coq コードのみを抽出したもの]] はちゃんと =coqc= できます。
+  抽出には =org-babel-tangle= とか  =org-babel-tangle-file= を使うとよいですねー[fn:extract]。
+
+
+[fn:rev_property] 「反転したとの先頭と元のリストの末尾が等しい」とか「反転しても長さは変わらない」とか。
+
+[fn:pg] 証明してる感が出るも何も、裏側で堂々と ProofGeneral が走っていて、表示しているゴールバッファも ProofGeneral の作るそれです。
+
+[fn:fail] いまの =pg-org= では評価に失敗するとバッファが切り替わって元にバッファに戻る操作をしなければいけないので、ちょっとだけ面倒です。
+
+[fn:show] ProofGeneral に =Show= 相当の関数があったっけな？ あったらそれ用のコマンド作った方がいいですね？
+
+[fn:extract] 多分、すぐに =pg-org= の機能として実装します。そういえば =coqc= か何かにあった =beautify= オプションはどこいったんだろう。
