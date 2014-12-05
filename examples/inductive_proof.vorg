@@ -1,6 +1,6 @@
 #+TITLE: 帰納法による証明の過程という体のデモ
 #+AUTHOR: mathink
-#+DATE: 2014/12/5 0:25:6
+#+DATE: 2014/12/6 4:51:44
 
 ただひたすらに
 
@@ -163,6 +163,7 @@
    #+BEGIN_SRC coq
      induction l as [| x xs IHl].
    #+END_SRC
+
    とすると二つのゴールが生成されます。
    #+BEGIN_EXAMPLE
 2 subgoals, subgoal 1 (ID 27)
@@ -225,6 +226,7 @@ subgoal 2 (ID 31) is:
    #+BEGIN_SRC coq
      Fail rewrite IHl.
    #+END_SRC
+
    #+BEGIN_EXAMPLE
 The command has indeed failed with message:
 => Error: Found no subterm matching "rev (rev xs)" in the current goal.
@@ -260,6 +262,7 @@ The command has indeed failed with message:
    #+END_SRC
 
    はい、帰納法のベースケースはもうありません。
+
    #+BEGIN_EXAMPLE
 1 subgoals, subgoal 1 (ID 55)
   
@@ -276,10 +279,13 @@ The command has indeed failed with message:
    #+END_EXAMPLE
    
    残りも
+
    #+BEGIN_SRC coq
      rewrite IHl, app_assoc; reflexivity.
    #+END_SRC
+
    で終わりました。
+
    #+BEGIN_EXAMPLE
 No more subgoals.
 
@@ -287,6 +293,7 @@ No more subgoals.
    #+END_EXAMPLE
    
    証明を終えたらちゃんと閉じておきましょう。
+
    #+BEGIN_SRC coq
    Qed.
    #+END_SRC
@@ -299,10 +306,13 @@ No more subgoals.
    補題の証明に取りかかる前のゴールをもう一度見返しましょう。
    
    あ、上にスクロールするのもいいですが
+
    #+BEGIN_SRC coq
    Show.
    #+END_SRC
+
    すると
+
    #+BEGIN_EXAMPLE
 1 subgoals, subgoal 1 (ID 34)
   
@@ -316,15 +326,19 @@ No more subgoals.
 
 (dependent evars:)
    #+END_EXAMPLE
+
    ってなるので、こちらもおすすめです。
    読む側としてはコピペと大差ないのですが、
    書きながらだと =Show.= を挟んだ方が楽ですね[fn:show]
 
    では証明の続き。
+
    #+BEGIN_SRC coq
      rewrite rev_app.
    #+END_SRC
+
    というように補題を早速使いますとゴールが
+
    #+BEGIN_EXAMPLE
 1 subgoals, subgoal 1 (ID 65)
   
@@ -338,12 +352,16 @@ No more subgoals.
 
 (dependent evars:)
    #+END_EXAMPLE
+
    となりますので、
+
    #+BEGIN_SRC coq
      rewrite IHl; simpl.
    #+END_SRC
+
    やっと帰納法が使えます。
    ついでに =simpl= しておきましたので、ゴールは
+
    #+BEGIN_EXAMPLE
 1 subgoals, subgoal 1 (ID 67)
   
@@ -357,10 +375,13 @@ No more subgoals.
 
 (dependent evars:)
    #+END_EXAMPLE
+
    となります。
+
    #+BEGIN_SRC coq
      reflexivity. Qed.
    #+END_SRC
+
    はい終わり。
 
    やった! 反転関数の性質を Org-mode で文書を書きながら証明できたぞ!!

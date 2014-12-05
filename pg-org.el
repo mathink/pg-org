@@ -1,12 +1,16 @@
+;; ================================
+;;  PG-Org mode: 
+;; * interactive proof with document
+;;
+;; ================================
+
 
 (define-derived-mode pg-org-mode org-mode
   "PG-Org mode"
-  "ProofGeneral Plugin (?) for Org-mode."
+  "Interactive Proof with Coq in Org-mode."
 
   ;; sorry, general
-  (setq proof-splash-time 0)
-
-  (defvar po:update-point 1)
+  (setq proof-splash-time nil)
 
   (define-key pg-org-mode-map
     (kbd "C-c C-<return>") 'po:update-here)
@@ -17,7 +21,30 @@
   (define-key pg-org-mode-map
     (kbd "C-c C-u") 'po:update-prev)
   (define-key pg-org-mode-map
-    (kbd "C-c C-x") 'po:exit))
+    (kbd "C-c C-x") 'po:exit)
+  (define-key pg-org-mode-map
+    (kbd "C-c C-i g") 'po:insert-goal)
+  (define-key pg-org-mode-map
+    (kbd "C-c C-i c") 'po:insert-cmd-result)
+  )
+
+(defvar po:update-point 1)
+
+(defun po:insert-string (string)
+  (insert "\n")
+  (org-cycle)
+  (insert "#+BEGIN_EXAMPLE\n")
+  (insert string)
+  (insert "#+END_EXAMPLE")
+  (org-cycle)
+  (insert "\n")
+  (org-cycle))
+
+
+;;
+;;  interactive proof
+;; --------------------------------
+;;  ProofGeneral like evaluation
 
 (defun po:update-here ()
   (interactive)
@@ -38,16 +65,40 @@
   (org-babel-previous-src-block)
   (po:update nil))
 
-(defun po:insert ()
+
+;;
+;;  insertion commands
+;; --------------------------------
+;;  computation result, subgoal, and other commands result
+
+(defun po:insert-result ()
   (interactive)
   (when proof-shell-last-output
-    (insert "\n")
-    (org-cycle)
-    (insert "#+BEGIN_EXAMPLE\n")
-    (insert (proof-shell-strip-output-markup proof-shell-last-output))
-    (insert "#+END_EXAMPLE")
-    (org-cycle)
-    (insert "\n")))
+    (po:insert-string
+     (proof-shell-strip-output-markup proof-shell-last-output))))
+
+(defun po:insert-goal ()
+  (interactive)
+  (let ((num
+	 (with-current-buffer proof-goals-buffer
+	   (string-to-number
+	    (coq-first-word-before "focused\\|subgoal")))))
+    (if (= num 1)
+	(po:insert-cmd-result "Show.")
+      (command-execute 'po:insert-subgoal))))
+
+(defun po:insert-subgoal (num)
+  (interactive "nShow goal number: ")
+  (po:insert-cmd-result (format "Show %d." num)))
+
+(defun po:insert-cmd-result (cmd)
+  (interactive "sCommand: ")
+  (po:insert-string (proof-shell-invisible-cmd-get-result cmd)))
+
+;; 
+;;  fundamental?
+;; --------------------------------
+;;  hmm...
 
 (defun po:exit ()
   (interactive)
@@ -60,6 +111,12 @@
       (proof-shell-exit t))
     (kill-buffer c)
     (setq po:update-point 1)))
+
+
+;;
+;;  auxirary functions
+;; --------------------------------
+;;  not key-binded functions
 
 (defun org-babel-where-is-src-block-tail ()
   "Goto End of src block."
