@@ -21,7 +21,7 @@
   (define-key pg-org-mode-map
     (kbd "C-c C-u") 'po:update-prev)
   (define-key pg-org-mode-map
-    (kbd "C-c C-x") 'po:exit)
+    (kbd "C-c C-x C-e") 'po:exit)
   (define-key pg-org-mode-map
     (kbd "C-c C-i g") 'po:insert-goal)
   (define-key pg-org-mode-map
