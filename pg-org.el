@@ -15,7 +15,7 @@
   (define-key pg-org-mode-map
     (kbd "C-c C-<return>") 'po:update-here)
   (define-key pg-org-mode-map
-    (kbd "C-c C-;") 'po:insert)
+    (kbd "C-c C-;") 'po:insert-result)
   (define-key pg-org-mode-map
     (kbd "C-c C-n") 'po:update-next)
   (define-key pg-org-mode-map
