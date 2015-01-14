@@ -1,6 +1,6 @@
 #+TITLE: Export Example
 #+AUTHOR: SDK
-#+DATE: 
+#+DATE: 2015/1/14 21:51:2
 
 * Section 1
 
@@ -19,7 +19,7 @@
    Foo $\langle M, \bullet, \epsilon \rangle$
 
    #+BEGIN_SRC coq
-     Polymorphic Structure Monoid :=
+     Structure Monoid :=
        {
          carrier:> Type;
          op: carrier -> carrier -> carrier;
@@ -37,11 +37,11 @@
 
 ** Subsection 1
 
-   Yoga
+   Yoga *日本語の強調はつらい*
 
 *** Subsubsection 1
 
-    It's =OK=
+    It's an instance of =Monoid= .
 
     #+BEGIN_SRC coq
       Definition listMonoid (A: Type): Monoid :=

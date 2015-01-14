@@ -145,7 +145,7 @@
          (temp-buf (generate-new-buffer "*temp*"))
          (fname (file-name-nondirectory (buffer-file-name src-buf)))
          (cname (concat "*pg-org: " fname "*"))
-         (c (get-buffer cname))
+         (c (get-buffer-create cname))
          (dir (file-name-directory (buffer-file-name src-buf))))
     ;; 
     ;; org-babel-tangle 用ファイルの生成
@@ -156,12 +156,9 @@
     (kill-buffer temp-buf)
 
     ;; 
-    ;; 既に pg-org で処理をしているか？
-    (unless c
-      (setf c (generate-new-buffer cname))
-      (with-current-buffer c
-        (setf buffer-offer-save nil)
-        (coq-mode)))
+    (with-current-buffer c
+      (setf buffer-offer-save nil)
+      (coq-mode))
 
     ;; 
     ;; バッファの更新
@@ -179,4 +176,5 @@
             (append-to-buffer c pos (point-max)))))
       (with-current-buffer c
         (goto-char (point-max))
-        (when eval-p (proof-goto-point))))))
+        (when eval-p
+	  (proof-goto-point))))))
