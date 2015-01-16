@@ -1,7 +1,7 @@
 # -*- mode: pg-org-mode -*-
 #+TITLE: PG-Org mode: interactive proof and documentation
 #+AUTHOR: mathink
-#+DATE: 2014/12/6 17:57:31
+#+DATE: 2015/1/16 21:15:0
 
 * 概要
 
@@ -15,19 +15,21 @@
 
 * 使い方
 
+  1/16(fri) に Org mode 用の Coq スクリプトエクスポータの =ox-coq.el= を使うようになりました。
+  作ったの僕なんですけどね、しかもかなりのプロトタイプ。
+
   1. ProofGeneral を使えるようにしておく。
   2. Org-mode も使えるようにしておく。
-  3. =pg-org.el= をパスの通る場所に置いて =(load "pg-org.el")= しておく。
-  4.  =auto-mode-alist= とか使って =pg-org-mode= と何かを関連付けておくとよい。
+  3. =ox-coq.el= をパスの通る場所に置いて =(load "ox-coq.el")= しておく。
+  4. =pg-org.el= をパスの通る場所に置いて =(load "pg-org.el")= しておく。
+  5.  =auto-mode-alist= とか使って =pg-org-mode= と何かを関連付けておくとよい。
 
 ** 設定例
 
-   なんとなく =.vorg= って拡張子を使ってます。
-   GitHub に挙げるなら =.org= の方が良さそうなんですけどね。
-
 #+BEGIN_SRC emacs-lisp
+(load "ox-coq")
 (load "pg-org")
-(add-to-list 'auto-mode-alist '("\\.vorg$" . pg-org-mode))
+(add-to-list 'auto-mode-alist '("\\.org$" . pg-org-mode))
 #+END_SRC   
 
 ** キーバインド

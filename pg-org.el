@@ -4,6 +4,8 @@
 ;;
 ;; ================================
 
+(require 'ox)
+(require 'ox-coq)
 
 (define-derived-mode pg-org-mode org-mode
   "PG-Org mode"
@@ -142,18 +144,16 @@
 
 (defun po:update-and-eval (buffer eval-p begin end)
   (let* ((src-buf buffer)
-         (temp-buf (generate-new-buffer "*temp*"))
          (fname (file-name-nondirectory (buffer-file-name src-buf)))
          (cname (concat "*pg-org: " fname "*"))
          (c (get-buffer-create cname))
          (dir (file-name-directory (buffer-file-name src-buf))))
     ;; 
     ;; org-babel-tangle 用ファイルの生成
-    (with-current-buffer temp-buf
+    (with-temp-buffer
       (insert-buffer-substring src-buf begin end)
-      (write-file "/tmp/pgorg_temp.org")
-      (org-babel-tangle nil "/tmp/pgorg_temp.v" "coq"))
-    (kill-buffer temp-buf)
+      (let ((org-export-show-temporary-export-buffer nil))
+	(org-export-to-buffer 'coqdoc c)))
 
     ;; 
     (with-current-buffer c
@@ -164,8 +164,8 @@
     ;; バッファの更新
     (let ((now (with-current-buffer c (buffer-string))))
       (with-temp-buffer
-        (insert-file-contents "/tmp/pgorg_temp.v")
-        (let* ((new (buffer-string))
+	(insert-buffer-substring src-buf begin end)
+        (let* ((new (org-export-as 'coqdoc))
                (pos (compare-strings now nil nil new nil nil)))
           (when (numberp pos)
             (setf pos (abs pos))

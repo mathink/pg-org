@@ -5,7 +5,7 @@
 (eval-when-compile (require 'cl))
 
 (defun org-coq-cons (p)
-  (cons p (intern-soft (concat "org-export-coq-" (symbol-name p)))))
+  (cons p (intern (concat "org-export-coq-" (symbol-name p)))))
 
 (org-export-define-backend
     'coqdoc
