@@ -1,3 +1,4 @@
+(require 'files)
 (require 'ox)
 (require 'ox-publish)
 (require 'format-spec)
@@ -11,7 +12,9 @@
     'coqdoc
   (mapcar
    #'org-coq-cons
-   '(bold code verbatim headline latex-fragment paragraph src-block inline-src-block section template))
+   '(bold code example-block
+	  verbatim headline latex-fragment plain-text
+	  paragraph src-block inline-src-block section template))
   ;; '(
   ;;    (bold . org-export-coq-bold)
   ;;    (code . org-export-coq-code)
@@ -54,11 +57,12 @@ Use utf-8 as the default value."
 
 (defun org-export-coq-template (contents info)
   (concat
+
    (org-export-coq-doc-info info)
    contents))
 
 (defun org-export-coq-doc-info (info)
-  (format "\n(* authored by: %s *)\n"
+  (format "(* authored by: %s *)\n"
 	  (and (plist-get info :with-author)
 	       (let ((auth (plist-get info :author)))
 	  	 (and auth
@@ -76,29 +80,43 @@ Use utf-8 as the default value."
 (defun org-export-coq-code (code contents info)
   (format "%s" (org-element-property :value code)))
 
+(defun org-export-coq-example-block (example-block contents info)
+  (let ((text (org-element-property :value example-block)))
+    (format "(**\n<<\n%s>>\n*)" text)))
+
 (defun org-export-coq-verbatim (verbatim contents info)
   (format "\[%s\]" (org-element-property :value verbatim)))
 
 (defun org-export-coq-headline (headline contents info)
   (let ((level (org-export-get-relative-level headline info))
 	(text (org-export-data (org-element-property :title headline) info)))
-    (format "%s(** %s %s *)\n%s\n"
-	    (if (= level 1) "\n" "")
+    (format "(** %s %s *)\n%s"
+	    ;; (if (= level 1) "\n" "")
 	    (make-string level ?*) text contents)))
 
 (defun org-export-coq-paragraph (paragraph contents info)
-  (format "(**\n%s\n*)" contents))
+  (format "(** \n%s *)" contents))
 
 (defun org-export-coq-src-block (src-block contents info)
   (let ((lang (org-element-property :language src-block))
 	(caption (org-export-get-caption src-block))
-	(code (car (org-export-unravel-code src-block))))
-    (if (string= "coq" lang) code
-      (format "(**\n<<\n%s>>\n*)\n" code))))
+	(code (car (org-export-unravel-code src-block)))
+	;; (code (car (org-export-format-code-default src-block info)))
+	)
+    (if (string= "coq" lang)
+	code
+	;; (concat
+	;;   "(* *)\n"
+	;;   code
+	;;   "(* *)")
+      (format "(**\n<<\n%s>>\n*)" code))))
 
 (defun org-export-coq-inline-src-block (inline-src-block contents info)
   (let ((code (org-element-property :value inline-src-block)))
     (format "[%s]" code)))
+
+(defun org-export-coq-plain-text (text info)
+  text)
 
 (defun org-export-coq-section (section contents info)
   (let ((parent (org-export-get-parent-headline section)))
@@ -108,12 +126,12 @@ Use utf-8 as the default value."
 		  (mapconcat
 		    #'number-to-string
 		    (org-export-get-headline-number parent info) "-"))))
-	(format "\n%s" contents)))))
+	(format "%s" contents)
+	))))
 
 (defun org-export-coq-latex-fragment (latex-fragment contents info)
   (let ((latex-frag (org-element-property :value latex-fragment)))
-    (format "%s" latex-frag)))
-
+    (format "$%s$" latex-frag)))
 
 (defun org-export-coq-almost (almost contents info)
   contents)
