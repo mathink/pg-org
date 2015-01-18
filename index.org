@@ -1,0 +1,7 @@
+#+TITLE: ProofGeneral In Org-mode
+#+AUTHOR: SUDA Keishi
+#+DATE:
+
+* Example
+
+  - [[./MonadKleisli.org][モナドと Kleisli triple]]
