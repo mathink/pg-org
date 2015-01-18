@@ -1,0 +1,714 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link href="coqdoc.css" rel="stylesheet" type="text/css"/>
+<title>MonadKleisli</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library MonadKleisli</h1>
+
+<div class="code">
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+モナドとKleisli triple の「等価性」を示そう。
+ 
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Set Implicit Arguments</span>.<br/>
+<span class="id" type="keyword">Unset</span> <span class="id" type="keyword">Strict</span> <span class="id" type="keyword">Implicit</span>.<br/>
+<span class="id" type="keyword">Set</span> <span class="id" type="var">Reversible</span> <span class="id" type="var">Pattern</span> <span class="id" type="keyword">Implicit</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab1"></a><h1 class="section">定義群とか</h1>
+
+<div class="paragraph"> </div>
+
+使うものの定義。
+ 
+<div class="paragraph"> </div>
+
+<a name="lab2"></a><h2 class="section">圏</h2>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Reserved Notation</span> "g \o f" (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 60, <span class="id" type="tactic">right</span> <span class="id" type="keyword">associativity</span>).<br/>
+<span class="id" type="keyword">Class</span> <a name="Category"><span class="id" type="record">Category</span></a>: <span class="id" type="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="obj"><span class="id" type="projection">obj</span></a>: <span class="id" type="keyword">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="hom"><span class="id" type="projection">hom</span></a>: <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a> → <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a> → <span class="id" type="keyword">Type</span>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="comp"><span class="id" type="projection">comp</span></a>: <span class="id" type="keyword">∀</span> {<span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">Z</span>: <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a>}, <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> → <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> <a class="idref" href="MonadKleisli.html#Z"><span class="id" type="variable">Z</span></a> → <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Z"><span class="id" type="variable">Z</span></a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">where</span> "g \o f" := (<a class="idref" href="MonadKleisli.html#comp"><span class="id" type="method">comp</span></a> <span class="id" type="var">f</span> <span class="id" type="var">g</span>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="id"><span class="id" type="projection">id</span></a>: <span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a>),  <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="comp_assoc"><span class="id" type="projection">comp_assoc</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">Z</span> <span class="id" type="var">W</span>: <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a>)(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>)(<span class="id" type="var">g</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> <a class="idref" href="MonadKleisli.html#Z"><span class="id" type="variable">Z</span></a>)(<span class="id" type="var">h</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#Z"><span class="id" type="variable">Z</span></a> <a class="idref" href="MonadKleisli.html#W"><span class="id" type="variable">W</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#h"><span class="id" type="variable">h</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">(</span></a><a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">(</span></a><a class="idref" href="MonadKleisli.html#h"><span class="id" type="variable">h</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="comp_id_dom"><span class="id" type="projection">comp_id_dom</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a>)(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">(</span></a><a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="comp_id_cod"><span class="id" type="projection">comp_id_cod</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a>)(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">(</span></a><a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">)</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a><br/>
+&nbsp;&nbsp;}.<br/>
+<span class="id" type="keyword">Notation</span> <a name="::x_'\o'_x"><span class="id" type="notation">"</span></a>g \o f" := (<a class="idref" href="MonadKleisli.html#comp"><span class="id" type="method">comp</span></a> <span class="id" type="var">f</span> <span class="id" type="var">g</span>) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 60, <span class="id" type="tactic">right</span> <span class="id" type="keyword">associativity</span>).<br/>
+<span class="id" type="keyword">Coercion</span> <a class="idref" href="MonadKleisli.html#obj"><span class="id" type="method">obj</span></a>: <span class="id" type="var">Category</span> &gt;-&gt; <span class="id" type="var">Sortclass</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab3"></a><h2 class="section">函手</h2>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Class</span> <a name="Functor"><span class="id" type="record">Functor</span></a> (<span class="id" type="var">C</span> <span class="id" type="var">D</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>): <span class="id" type="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="fobj"><span class="id" type="projection">fobj</span></a>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> → <a class="idref" href="MonadKleisli.html#D"><span class="id" type="variable">D</span></a>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="fmap"><span class="id" type="projection">fmap</span></a>: <span class="id" type="keyword">∀</span> {<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>}, <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> → <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> (<a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) (<a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="fmap_comp"><span class="id" type="projection">fmap_comp</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">Z</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>)(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>)(<span class="id" type="var">g</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> <a class="idref" href="MonadKleisli.html#Z"><span class="id" type="variable">Z</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> (<a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> <a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="fmap_id"><span class="id" type="projection">fmap_id</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> (<a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> (<a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>)<br/>
+&nbsp;&nbsp;}.<br/>
+<span class="id" type="keyword">Coercion</span> <a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a>: <span class="id" type="var">Functor</span> &gt;-&gt; <span class="id" type="var">Funclass</span>.<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Fobj'_x"><span class="id" type="notation">"</span></a>'Fobj' F" := (<a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a> (<span class="id" type="var">Functor</span>:=<span class="id" type="var">F</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Fmap'_x"><span class="id" type="notation">"</span></a>'Fmap' F" := (<a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> (<span class="id" type="var">Functor</span>:=<span class="id" type="var">F</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Fmap_comp'_x"><span class="id" type="notation">"</span></a>'Fmap_comp' F" := (<a class="idref" href="MonadKleisli.html#fmap_comp"><span class="id" type="method">fmap_comp</span></a> (<span class="id" type="var">Functor</span>:=<span class="id" type="var">F</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'''Fmap_id'_x"><span class="id" type="notation">"</span></a>'Fmap_id F" := (<a class="idref" href="MonadKleisli.html#fmap_id"><span class="id" type="method">fmap_id</span></a> (<span class="id" type="var">Functor</span>:=<span class="id" type="var">F</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab4"></a><h3 class="section">合成函手</h3>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Instance</span> <a name="comp_F"><span class="id" type="instance">comp_F</span></a> {<span class="id" type="var">C</span> <span class="id" type="var">D</span> <span class="id" type="var">E</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" type="var">F</span>: <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> <a class="idref" href="MonadKleisli.html#D"><span class="id" type="variable">D</span></a>)(<span class="id" type="var">G</span>: <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#D"><span class="id" type="variable">D</span></a> <a class="idref" href="MonadKleisli.html#E"><span class="id" type="variable">E</span></a>): <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> <a class="idref" href="MonadKleisli.html#E"><span class="id" type="variable">E</span></a> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a> <span class="id" type="var">X</span> := <span class="id" type="var">G</span> (<span class="id" type="var">F</span> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> <span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">f</span> := <a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <span class="id" type="var">G</span> (<a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <span class="id" type="var">F</span> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>)<br/>
+&nbsp;&nbsp;}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+2 subgoals, subgoal 1 (ID 30)
+  
+  C : Category
+  D : Category
+  E : Category
+  F : Functor C D
+  G : Functor D E
+  ============================
+   forall (X Y Z : C) (f : hom X Y) (g : hom Y Z),
+   Fmap G (Fmap F (g \o f)) = Fmap G (Fmap F g) \o Fmap G (Fmap F f)
+
+subgoal 2 (ID 31) is:
+ forall X : C, Fmap G (Fmap F (id X)) = id (G (F X))
+
+(dependent evars:)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;- <span class="id" type="tactic">intros</span>; <span class="id" type="tactic">repeat</span> <span class="id" type="tactic">rewrite</span> <a class="idref" href="MonadKleisli.html#fmap_comp"><span class="id" type="method">fmap_comp</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="id" type="tactic">intros</span>; <span class="id" type="tactic">repeat</span> <span class="id" type="tactic">rewrite</span> <a class="idref" href="MonadKleisli.html#fmap_id"><span class="id" type="method">fmap_id</span></a>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="tactic">reflexivity</span>.<br/>
+<span class="id" type="keyword">Defined</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab5"></a><h3 class="section">恒等函手</h3>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Instance</span> <a name="id_F"><span class="id" type="instance">id_F</span></a> (<span class="id" type="var">C</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>): <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#fobj"><span class="id" type="method">fobj</span></a> <span class="id" type="var">X</span> := <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#fmap"><span class="id" type="method">fmap</span></a> <span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">f</span> := <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a><br/>
+&nbsp;&nbsp;}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+2 subgoals, subgoal 1 (ID 66)
+  
+  C : Category
+  ============================
+   forall (X Y Z : C) (f : hom X Y) (g : hom Y Z), g \o f = g \o f
+
+subgoal 2 (ID 67) is:
+ forall X : C, id X = id X
+
+(dependent evars:)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;- <span class="id" type="tactic">reflexivity</span>.<br/>
+&nbsp;&nbsp;- <span class="id" type="tactic">reflexivity</span>.<br/>
+<span class="id" type="keyword">Defined</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab6"></a><h2 class="section">自然変換</h2>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Class</span> <a name="Natrans"><span class="id" type="record">Natrans</span></a> {<span class="id" type="var">C</span> <span class="id" type="var">D</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>}(<span class="id" type="var">F</span> <span class="id" type="var">G</span>: <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> <a class="idref" href="MonadKleisli.html#D"><span class="id" type="variable">D</span></a>): <span class="id" type="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="natrans"><span class="id" type="projection">natrans</span></a>: <span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>), <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> (<a class="idref" href="MonadKleisli.html#F"><span class="id" type="variable">F</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) (<a class="idref" href="MonadKleisli.html#G"><span class="id" type="variable">G</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="naturality"><span class="id" type="projection">naturality</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> {<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>}(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#natrans"><span class="id" type="method">natrans</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <a class="idref" href="MonadKleisli.html#F"><span class="id" type="variable">F</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <a class="idref" href="MonadKleisli.html#G"><span class="id" type="variable">G</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#natrans"><span class="id" type="method">natrans</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a><br/>
+&nbsp;&nbsp;}.<br/>
+<span class="id" type="keyword">Coercion</span> <a class="idref" href="MonadKleisli.html#natrans"><span class="id" type="method">natrans</span></a>: <span class="id" type="var">Natrans</span> &gt;-&gt; <span class="id" type="var">Funclass</span>.<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Naturality'_x"><span class="id" type="notation">"</span></a>'Naturality' S" := (<a class="idref" href="MonadKleisli.html#naturality"><span class="id" type="method">naturality</span></a> (<span class="id" type="var">Natrans</span>:=<span class="id" type="var">S</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab7"></a><h2 class="section">モナド</h2>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Class</span> <a name="Monad"><span class="id" type="record">Monad</span></a> {<span class="id" type="var">C</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>}(<span class="id" type="var">T</span>: <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>): <span class="id" type="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="eta"><span class="id" type="projection">eta</span></a>: <a class="idref" href="MonadKleisli.html#Natrans"><span class="id" type="class">Natrans</span></a> (<a class="idref" href="MonadKleisli.html#id_F"><span class="id" type="instance">id_F</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>) <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="mu"><span class="id" type="projection">mu</span></a>: <a class="idref" href="MonadKleisli.html#Natrans"><span class="id" type="class">Natrans</span></a> (<a class="idref" href="MonadKleisli.html#comp_F"><span class="id" type="instance">comp_F</span></a> <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a>) <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="mu_eta_T"><span class="id" type="projection">mu_eta_T</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#eta"><span class="id" type="method">eta</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="mu_T_eta"><span class="id" type="projection">mu_T_eta</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> (<a class="idref" href="MonadKleisli.html#eta"><span class="id" type="method">eta</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="mu_mu"><span class="id" type="projection">mu_mu</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> (<a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>)<br/>
+&nbsp;&nbsp;}.<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Eta'_x"><span class="id" type="notation">"</span></a>'Eta' m" := (<a class="idref" href="MonadKleisli.html#eta"><span class="id" type="method">eta</span></a> (<span class="id" type="var">Monad</span>:=<span class="id" type="var">m</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Mu'_x"><span class="id" type="notation">"</span></a>'Mu' m" := (<a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> (<span class="id" type="var">Monad</span>:=<span class="id" type="var">m</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Mu_eta_T'_x"><span class="id" type="notation">"</span></a>'Mu_eta_T' m" := (<a class="idref" href="MonadKleisli.html#mu_eta_T"><span class="id" type="method">mu_eta_T</span></a> (<span class="id" type="var">Monad</span>:=<span class="id" type="var">m</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Mu_T_eta'_x"><span class="id" type="notation">"</span></a>'Mu_T_eta' m" := (<a class="idref" href="MonadKleisli.html#mu_T_eta"><span class="id" type="method">mu_T_eta</span></a> (<span class="id" type="var">Monad</span>:=<span class="id" type="var">m</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+<span class="id" type="keyword">Notation</span> <a name="::'Mu_mu'_x"><span class="id" type="notation">"</span></a>'Mu_mu' m" := (<a class="idref" href="MonadKleisli.html#mu_mu"><span class="id" type="method">mu_mu</span></a> (<span class="id" type="var">Monad</span>:=<span class="id" type="var">m</span>)) (<span class="id" type="tactic">at</span> <span class="id" type="keyword">level</span> 5).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab8"></a><h2 class="section">Kleisli triple</h2>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Class</span> <a name="Kleisli"><span class="id" type="record">Kleisli</span></a> {<span class="id" type="var">C</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>}(<span class="id" type="var">T</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> → <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>): <span class="id" type="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="bind"><span class="id" type="projection">bind</span></a>: <span class="id" type="keyword">∀</span> {<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>}, <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>) → <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>) (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>);<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="ret"><span class="id" type="projection">ret</span></a>: <span class="id" type="keyword">∀</span> {<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>}, <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="bind_ret"><span class="id" type="projection">bind_ret</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> <a class="idref" href="MonadKleisli.html#ret"><span class="id" type="method">ret</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#id"><span class="id" type="method">id</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a>);<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="ret_bind"><span class="id" type="projection">ret_bind</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>)(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#ret"><span class="id" type="method">ret</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>;<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a name="bind_bind"><span class="id" type="projection">bind_bind</span></a>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">Z</span>: <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>)(<span class="id" type="var">f</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>))(<span class="id" type="var">g</span>: <a class="idref" href="MonadKleisli.html#hom"><span class="id" type="method">hom</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> (<a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> <a class="idref" href="MonadKleisli.html#Z"><span class="id" type="variable">Z</span></a>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> <a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> (<a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> <a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>)<br/>
+&nbsp;&nbsp;}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab9"></a><h1 class="section">証明</h1>
+<a name="lab10"></a><h2 class="section">モナドから Kleisli triple を作る</h2>
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Instance</span> <a name="KT_from_Monad"><span class="id" type="instance">KT_from_Monad</span></a> {<span class="id" type="var">C</span>: <a class="idref" href="MonadKleisli.html#Category"><span class="id" type="class">Category</span></a>}{<span class="id" type="var">T</span>: <a class="idref" href="MonadKleisli.html#Functor"><span class="id" type="class">Functor</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a> <a class="idref" href="MonadKleisli.html#C"><span class="id" type="variable">C</span></a>}(<span class="id" type="var">m</span>: <a class="idref" href="MonadKleisli.html#Monad"><span class="id" type="class">Monad</span></a> <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a>): <a class="idref" href="MonadKleisli.html#Kleisli"><span class="id" type="class">Kleisli</span></a> <a class="idref" href="MonadKleisli.html#T"><span class="id" type="variable">T</span></a> :=<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#bind"><span class="id" type="method">bind</span></a> <span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">f</span> := <a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <span class="id" type="var">T</span> <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a>;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="MonadKleisli.html#ret"><span class="id" type="method">ret</span></a> <span class="id" type="var">X</span> := <a class="idref" href="MonadKleisli.html#eta"><span class="id" type="method">eta</span></a> <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a><br/>
+&nbsp;&nbsp;}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+3 subgoals, subgoal 1 (ID 119)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall X : C, Mu m X \o Fmap T (Eta m X) = id (T X)
+
+subgoal 2 (ID 120) is:
+ forall (X Y : C) (f : hom X (T Y)), (Mu m Y \o Fmap T f) \o Eta m X = f
+subgoal 3 (ID 121) is:
+ forall (X Y Z : C) (f : hom X (T Y)) (g : hom Y (T Z)),
+ (Mu m Z \o Fmap T g) \o Mu m Y \o Fmap T f =
+ Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars:)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="keyword">Proof</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab11"></a><h3 class="section">規則1</h3>
+
+<div class="paragraph"> </div>
+
+<pre>
+subgoal 1 (ID 119) is:
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall X : C, Mu m X \o Fmap T (Eta m X) = id (T X)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+- <span class="id" type="tactic">intros</span> <span class="id" type="var">X</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 2)
+, subgoal 1 (ID 122)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  ============================
+   Mu m X \o Fmap T (Eta m X) = id (T X)
+
+(dependent evars:)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="var">now</span> <span class="id" type="tactic">apply</span> (<a class="idref" href="MonadKleisli.html#mu_T_eta"><span class="id" type="method">mu_T_eta</span></a> <span class="id" type="var">X</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab12"></a><h3 class="section">規則2</h3>
+
+<div class="paragraph"> </div>
+
+<pre>
+subgoal 2 (ID 120) is:
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall (X Y : C) (f : hom X (T Y)), (Mu m Y \o Fmap T f) \o Eta m X = f
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+- <span class="id" type="tactic">intros</span> <span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">f</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 128)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   (Mu m Y \o Fmap T f) \o Eta m X = f
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">rewrite</span> &lt;-<a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 130)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   Mu m Y \o Fmap T f \o Eta m X = f
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">rewrite</span> &lt;-(<a class="idref" href="MonadKleisli.html#::'Naturality'_x"><span class="id" type="notation">Naturality</span></a> <a class="idref" href="MonadKleisli.html#eta"><span class="id" type="method">eta</span></a> <span class="id" type="var">f</span>); <span class="id" type="tactic">simpl</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 141)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   Mu m Y \o Eta m (T Y) \o f = f
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">rewrite</span> <a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 143)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   (Mu m Y \o Eta m (T Y)) \o f = f
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">generalize</span> (<a class="idref" href="MonadKleisli.html#::'Mu_eta_T'_x"><span class="id" type="notation">Mu_eta_T</span></a> <span class="id" type="var">m</span> <span class="id" type="var">Y</span>) <span class="id" type="keyword">as</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">simpl</span>; <span class="id" type="tactic">intro</span>; <span class="id" type="tactic">rewrite</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">clear</span> <span class="id" type="var">Heq</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 150)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   id (T Y) \o f = f
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="var">now</span> <span class="id" type="tactic">apply</span> <a class="idref" href="MonadKleisli.html#comp_id_cod"><span class="id" type="method">comp_id_cod</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab13"></a><h3 class="section">規則3</h3>
+
+<div class="paragraph"> </div>
+
+<pre>
+subgoal 3 (ID 121) is:
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall (X Y Z : C) (f : hom X (T Y)) (g : hom Y (T Z)),
+   (Mu m Z \o Fmap T g) \o Mu m Y \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+- <span class="id" type="tactic">intros</span> <span class="id" type="var">X</span> <span class="id" type="var">Y</span> <span class="id" type="var">Z</span> <span class="id" type="var">f</span> <span class="id" type="var">g</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 156)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  ============================
+   (Mu m Z \o Fmap T g) \o Mu m Y \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">rewrite</span> &lt;- <a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a>, (<a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a> (<a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <span class="id" type="var">T</span> <span class="id" type="var">f</span>) (<a class="idref" href="MonadKleisli.html#mu"><span class="id" type="method">mu</span></a> <span class="id" type="var">Y</span>) (<a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <span class="id" type="var">T</span> <span class="id" type="var">g</span>)).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 175)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  ============================
+   Mu m Z \o (Fmap T g \o Mu m Y) \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">generalize</span> (<a class="idref" href="MonadKleisli.html#::'Naturality'_x"><span class="id" type="notation">Naturality</span></a> <a class="idref" href="MonadKleisli.html#::'Naturality'_x"><span class="id" type="notation">(</span></a><a class="idref" href="MonadKleisli.html#::'Mu'_x"><span class="id" type="notation">Mu</span></a> <span class="id" type="var">m</span><a class="idref" href="MonadKleisli.html#::'Naturality'_x"><span class="id" type="notation">)</span></a> <span class="id" type="var">g</span>) <span class="id" type="keyword">as</span> <span class="id" type="var">Heq</span>; <span class="id" type="tactic">simpl</span>; <span class="id" type="tactic">intro</span>; <span class="id" type="tactic">rewrite</span> &lt;- <span class="id" type="var">Heq</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 187)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  Heq : Mu m (T Z) \o Fmap T (Fmap T g) = Fmap T g \o Mu m Y
+  ============================
+   Mu m Z \o (Mu m (T Z) \o Fmap T (Fmap T g)) \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">rewrite</span> &lt;- <a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a>, (<a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a> <span class="id" type="var">_</span> (<a class="idref" href="MonadKleisli.html#::'Mu'_x"><span class="id" type="notation">Mu</span></a> <span class="id" type="var">m</span> (<span class="id" type="var">T</span> <span class="id" type="var">Z</span>))).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 198)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  Heq : Mu m (T Z) \o Fmap T (Fmap T g) = Fmap T g \o Mu m Y
+  ============================
+   (Mu m Z \o Mu m (T Z)) \o Fmap T (Fmap T g) \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="tactic">rewrite</span> (<a class="idref" href="MonadKleisli.html#::'Mu_mu'_x"><span class="id" type="notation">Mu_mu</span></a> <span class="id" type="var">m</span> <span class="id" type="var">Z</span>), &lt;- (<a class="idref" href="MonadKleisli.html#fmap_comp"><span class="id" type="method">fmap_comp</span></a> <span class="id" type="var">f</span> <span class="id" type="var">_</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<pre>
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 209)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  Heq : Mu m (T Z) \o Fmap T (Fmap T g) = Fmap T g \o Mu m Y
+  ============================
+   (Mu m Z \o Fmap T (Mu m Z)) \o Fmap T (Fmap T g \o f) =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+</pre>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" type="var">now</span> <span class="id" type="tactic">rewrite</span> &lt;- <a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a>, &lt;- (<a class="idref" href="MonadKleisli.html#fmap_comp"><span class="id" type="method">fmap_comp</span></a> (<a class="idref" href="MonadKleisli.html#::'Fmap'_x"><span class="id" type="notation">Fmap</span></a> <span class="id" type="var">T</span> <span class="id" type="var">g</span> <a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">\</span></a><a class="idref" href="MonadKleisli.html#::x_'\o'_x"><span class="id" type="notation">o</span></a> <span class="id" type="var">f</span>) <span class="id" type="var">_</span>), <a class="idref" href="MonadKleisli.html#comp_assoc"><span class="id" type="method">comp_assoc</span></a>.<br/>
+
+<br/>
+<span class="id" type="keyword">Defined</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab14"></a><h2 class="section">Kleisli triple からモナドを作る</h2>
+
+<div class="paragraph"> </div>
+
+乞う御期待!!
+ 
+</div>
+<div class="code">
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,521 @@
+#+TITLE: モナドと Kleisli Triple
+#+AUTHOR: mathink
+#+DATE: 2015/1/18 23:10:10
+
+モナドとKleisli triple の「等価性」を示そう。
+
+#+BEGIN_SRC coq
+  Set Implicit Arguments.
+  Unset Strict Implicit.
+  Set Reversible Pattern Implicit.
+#+END_SRC
+
+* 定義群とか
+  使うものの定義。
+
+** 圏
+  #+BEGIN_SRC coq
+    Reserved Notation "g \o f" (at level 60, right associativity).
+    Class Category: Type :=
+      {
+        obj: Type;
+        hom: obj -> obj -> Type;
+        comp: forall {X Y Z: obj}, hom X Y -> hom Y Z -> hom X Z
+        where "g \o f" := (comp f g);
+        id: forall (X: obj),  hom X X;
+
+        comp_assoc:
+          forall (X Y Z W: obj)(f: hom X Y)(g: hom Y Z)(h: hom Z W),
+            h \o (g \o f) = (h \o g) \o f;
+
+        comp_id_dom:
+          forall (X Y: obj)(f: hom X Y),
+            f \o (id X) = f;
+        
+        comp_id_cod:
+          forall (X Y: obj)(f: hom X Y),
+            (id Y) \o f = f
+      }.
+    Notation "g \o f" := (comp f g) (at level 60, right associativity).
+    Coercion obj: Category >-> Sortclass.
+  #+END_SRC
+
+** 函手
+  #+BEGIN_SRC coq
+    Class Functor (C D: Category): Type :=
+      {
+        fobj: C -> D;
+        fmap: forall {X Y: C}, hom X Y -> hom (fobj X) (fobj Y);
+
+        fmap_comp:
+          forall (X Y Z: C)(f: hom X Y)(g: hom Y Z),
+            fmap (g \o f) = fmap g \o fmap f;
+
+        fmap_id:
+          forall (X: C),
+            fmap (id X) = id (fobj X)
+      }.
+    Coercion fobj: Functor >-> Funclass.
+    Notation "'Fobj' F" := (fobj (Functor:=F)) (at level 5).
+    Notation "'Fmap' F" := (fmap (Functor:=F)) (at level 5).
+    Notation "'Fmap_comp' F" := (fmap_comp (Functor:=F)) (at level 5).
+    Notation "'Fmap_id F" := (fmap_id (Functor:=F)) (at level 5).
+  #+END_SRC
+
+*** 合成函手
+  #+BEGIN_SRC coq
+    Instance comp_F {C D E: Category}
+             (F: Functor C D)(G: Functor D E): Functor C E :=
+      {
+        fobj X := G (F X);
+        fmap X Y f := Fmap G (Fmap F f)
+      }.
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+2 subgoals, subgoal 1 (ID 30)
+  
+  C : Category
+  D : Category
+  E : Category
+  F : Functor C D
+  G : Functor D E
+  ============================
+   forall (X Y Z : C) (f : hom X Y) (g : hom Y Z),
+   Fmap G (Fmap F (g \o f)) = Fmap G (Fmap F g) \o Fmap G (Fmap F f)
+
+subgoal 2 (ID 31) is:
+ forall X : C, Fmap G (Fmap F (id X)) = id (G (F X))
+
+(dependent evars:)
+  #+END_EXAMPLE
+  
+  #+BEGIN_SRC coq
+    Proof.
+      - intros; repeat rewrite fmap_comp.
+        reflexivity.
+      - intros; repeat rewrite fmap_id.
+        reflexivity.
+    Defined.
+  #+END_SRC
+
+*** 恒等函手
+  #+BEGIN_SRC coq
+    Instance id_F (C: Category): Functor C C :=
+      {
+        fobj X := X;
+        fmap X Y f := f
+      }.
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+2 subgoals, subgoal 1 (ID 66)
+  
+  C : Category
+  ============================
+   forall (X Y Z : C) (f : hom X Y) (g : hom Y Z), g \o f = g \o f
+
+subgoal 2 (ID 67) is:
+ forall X : C, id X = id X
+
+(dependent evars:)
+  #+END_EXAMPLE
+  
+  #+BEGIN_SRC coq
+    Proof.
+      - reflexivity.
+      - reflexivity.
+    Defined.
+  #+END_SRC
+
+** 自然変換
+  #+BEGIN_SRC coq
+    Class Natrans {C D: Category}(F G: Functor C D): Type :=
+      {
+        natrans: forall (X: C), hom (F X) (G X);
+
+        naturality:
+          forall {X Y: C}(f: hom X Y),
+            natrans Y \o Fmap F f = Fmap G f \o natrans X
+      }.
+    Coercion natrans: Natrans >-> Funclass.
+    Notation "'Naturality' S" := (naturality (Natrans:=S)) (at level 5).
+  #+END_SRC
+
+** モナド
+  #+BEGIN_SRC coq
+    Class Monad {C: Category}(T: Functor C C): Type :=
+      {
+        eta: Natrans (id_F C) T;
+        mu: Natrans (comp_F T T) T;
+
+        mu_eta_T:
+          forall (X: C),
+            mu X \o eta (T X) = id (T X);
+
+        mu_T_eta:
+          forall (X: C),
+            mu X \o Fmap T (eta X) = id (T X);
+
+        mu_mu:
+          forall (X: C),
+            mu X \o mu (T X) = mu X \o Fmap T (mu X)
+      }.
+    Notation "'Eta' m" := (eta (Monad:=m)) (at level 5).
+    Notation "'Mu' m" := (mu (Monad:=m)) (at level 5).
+    Notation "'Mu_eta_T' m" := (mu_eta_T (Monad:=m)) (at level 5).
+    Notation "'Mu_T_eta' m" := (mu_T_eta (Monad:=m)) (at level 5).
+    Notation "'Mu_mu' m" := (mu_mu (Monad:=m)) (at level 5).
+  #+END_SRC
+
+** Kleisli triple
+  #+BEGIN_SRC coq
+    Class Kleisli {C: Category}(T: C -> C): Type :=
+      {
+        bind: forall {X Y: C}, hom X (T Y) -> hom (T X) (T Y);
+        ret: forall {X: C}, hom X (T X);
+
+        bind_ret:
+          forall (X: C),
+            bind ret = id (T X);
+        
+        ret_bind:
+          forall (X Y: C)(f: hom X (T Y)),
+            bind f \o ret = f;
+
+        bind_bind:
+          forall (X Y Z: C)(f: hom X (T Y))(g: hom Y (T Z)),
+            bind g \o bind f = bind (bind g \o f)
+      }.
+  #+END_SRC
+
+* 証明
+
+** モナドから Kleisli triple を作る
+
+   #+BEGIN_SRC coq
+     Instance KT_from_Monad {C: Category}{T: Functor C C}(m: Monad T): Kleisli T :=
+       {
+         bind X Y f := mu Y \o Fmap T f;
+         ret X := eta X
+       }.
+   #+END_SRC
+
+
+   #+BEGIN_EXAMPLE
+3 subgoals, subgoal 1 (ID 119)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall X : C, Mu m X \o Fmap T (Eta m X) = id (T X)
+
+subgoal 2 (ID 120) is:
+ forall (X Y : C) (f : hom X (T Y)), (Mu m Y \o Fmap T f) \o Eta m X = f
+subgoal 3 (ID 121) is:
+ forall (X Y Z : C) (f : hom X (T Y)) (g : hom Y (T Z)),
+ (Mu m Z \o Fmap T g) \o Mu m Y \o Fmap T f =
+ Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars:)
+   #+END_EXAMPLE
+   
+   #+BEGIN_SRC coq
+     Proof.
+   #+END_SRC
+   
+*** 規則1
+    
+    #+BEGIN_EXAMPLE
+subgoal 1 (ID 119) is:
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall X : C, Mu m X \o Fmap T (Eta m X) = id (T X)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      - intros X.
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 2)
+, subgoal 1 (ID 122)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  ============================
+   Mu m X \o Fmap T (Eta m X) = id (T X)
+
+(dependent evars:)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      now apply (mu_T_eta X).
+    #+END_SRC
+    
+*** 規則2
+
+    #+BEGIN_EXAMPLE
+subgoal 2 (ID 120) is:
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall (X Y : C) (f : hom X (T Y)), (Mu m Y \o Fmap T f) \o Eta m X = f
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      - intros X Y f.
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 128)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   (Mu m Y \o Fmap T f) \o Eta m X = f
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      rewrite <-comp_assoc.
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 130)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   Mu m Y \o Fmap T f \o Eta m X = f
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      rewrite <-(Naturality eta f); simpl.
+    #+END_SRC
+
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 141)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   Mu m Y \o Eta m (T Y) \o f = f
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      rewrite comp_assoc.
+    #+end_src
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 143)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   (Mu m Y \o Eta m (T Y)) \o f = f
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+begin_src coq
+      generalize (Mu_eta_T m Y) as Heq; simpl; intro; rewrite Heq; clear Heq.
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 1)
+, subgoal 1 (ID 150)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  f : hom X (T Y)
+  ============================
+   id (T Y) \o f = f
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      now apply comp_id_cod.
+    #+END_SRC
+
+*** 規則3
+
+    #+BEGIN_EXAMPLE
+subgoal 3 (ID 121) is:
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  ============================
+   forall (X Y Z : C) (f : hom X (T Y)) (g : hom Y (T Z)),
+   (Mu m Z \o Fmap T g) \o Mu m Y \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      - intros X Y Z f g.
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 156)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  ============================
+   (Mu m Z \o Fmap T g) \o Mu m Y \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      rewrite <- comp_assoc, (comp_assoc (Fmap T f) (mu Y) (Fmap T g)).
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 175)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  ============================
+   Mu m Z \o (Fmap T g \o Mu m Y) \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      generalize (Naturality (Mu m) g) as Heq; simpl; intro; rewrite <- Heq.
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 187)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  Heq : Mu m (T Z) \o Fmap T (Fmap T g) = Fmap T g \o Mu m Y
+  ============================
+   Mu m Z \o (Mu m (T Z) \o Fmap T (Fmap T g)) \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      rewrite <- comp_assoc, (comp_assoc _ (Mu m (T Z))).
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 198)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  Heq : Mu m (T Z) \o Fmap T (Fmap T g) = Fmap T g \o Mu m Y
+  ============================
+   (Mu m Z \o Mu m (T Z)) \o Fmap T (Fmap T g) \o Fmap T f =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      rewrite (Mu_mu m Z), <- (fmap_comp f _).
+    #+END_SRC
+
+    #+BEGIN_EXAMPLE
+1 focused subgoals (unfocused: 0)
+, subgoal 1 (ID 209)
+  
+  C : Category
+  T : Functor C C
+  m : Monad T
+  X : C
+  Y : C
+  Z : C
+  f : hom X (T Y)
+  g : hom Y (T Z)
+  Heq : Mu m (T Z) \o Fmap T (Fmap T g) = Fmap T g \o Mu m Y
+  ============================
+   (Mu m Z \o Fmap T (Mu m Z)) \o Fmap T (Fmap T g \o f) =
+   Mu m Z \o Fmap T ((Mu m Z \o Fmap T g) \o f)
+
+(dependent evars: ?123 using , ?124 using ,)
+    #+END_EXAMPLE
+    
+    #+BEGIN_SRC coq
+      now rewrite <- comp_assoc, <- (fmap_comp (Fmap T g \o f) _), comp_assoc.
+    #+END_SRC
+
+    #+BEGIN_SRC coq
+      Defined.
+    #+END_SRC
+
+** Kleisli triple からモナドを作る
+
+   乞う御期待!!
