@@ -1,6 +1,7 @@
 #+TITLE: ProofGeneral In Org-mode
 #+AUTHOR: SUDA Keishi
-#+DATE:
+#+DATE: 2015/1/18 23:24:26
+#+OPTIONS: toc:nil
 
 * Example
 
