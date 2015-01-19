@@ -1,6 +1,6 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/19 3:7:31
+#+DATE: 2015/1/19 9:19:34
 #+LATEX
 
 モナドとKleisli triple の「等価性」を示そう。
@@ -9,6 +9,9 @@
   Set Implicit Arguments.
   Unset Strict Implicit.
   Set Reversible Pattern Implicit.
+
+  Require Ssreflect.ssreflect.
+  Import ssreflect.SsrSyntax.
 #+END_SRC
 
 * 定義群とか
@@ -100,10 +103,8 @@ subgoal 2 (ID 31) is:
   
   #+BEGIN_SRC coq
     Proof.
-      - intros; repeat rewrite fmap_comp.
-        reflexivity.
-      - intros; repeat rewrite fmap_id.
-        reflexivity.
+      { move=> *; rewrite !fmap_comp //. }
+      { move=> *; rewrite !fmap_id //. }
     Defined.
   #+END_SRC
 
@@ -131,8 +132,8 @@ subgoal 2 (ID 67) is:
   
   #+BEGIN_SRC coq
     Proof.
-      - reflexivity.
-      - reflexivity.
+      { by []. }
+      { by []. }
     Defined.
   #+END_SRC
 
