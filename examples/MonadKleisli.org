@@ -1,6 +1,7 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/18 23:10:10
+#+DATE: 2015/1/19 3:7:31
+#+LATEX
 
 モナドとKleisli triple の「等価性」を示そう。
 
@@ -14,6 +15,13 @@
   使うものの定義。
 
 ** 圏
+
+   #+BEGIN_LaTeX
+   \begin{equation}
+   x = \sqrt{b}
+   \end{equation}
+   #+END_LaTeX
+
   #+BEGIN_SRC coq
     Reserved Notation "g \o f" (at level 60, right associativity).
     Class Category: Type :=
