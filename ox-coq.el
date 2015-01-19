@@ -85,23 +85,20 @@ Use utf-8 as the default value."
 (defun org-export-coq-code (code contents info)
   (format "%s" (org-element-property :value code)))
 
-;; (defun org-export-coq-example-block (example-block contents info)
-;;   (let ((text (org-element-property :value example-block))
-;; 	(attrs (org-export-read-attribute :attr_coq example-block)))
-;;     (format "(** \n<<\n%s>>\n*)" text)))
-
 (defun org-export-coq-example-block (example-block contents info)
   (let* ((text (org-element-property :value example-block))
 	 (attrs (org-export-read-attribute :attr_coq example-block))
 	 (name (plist-get attrs :name))
 	 (type (plist-get attrs :type)))
-    (cond ((or (string= type "goal")
-	       (string= type "command"))
-	   (format "(** #<div class=\"%s\">%s#\n<<\n%s>>\n#</div># *)"
+    (format "(** #<div class=\"example\" type=\"%s\">%s#\n<<\n%s>>\n#</div># *)"
 		   type
-		   (if name (format "\n<span class=\"name\">%s [>>]</span>" name) "")
-		   text))
-	  (t (format "(** \n<<\n%s>>\n*)" text)))))
+		   (if name (format "\n<span class=\"name\">%s</span>" name) "")
+		   text)
+    ;; (cond ((or (string= type "goal")
+    ;; 	       (string= type "command"))
+    ;; 	   )
+    ;; 	  (t (format "(** \n<<\n%s>>\n*)" text)))
+    ))
 
 (defun org-export-coq-verbatim (verbatim contents info)
   (let* ((parent (org-export-get-parent-element verbatim))
@@ -114,13 +111,14 @@ Use utf-8 as the default value."
 	(text (org-export-data (org-element-property :title headline) info)))
     (format "(** %s %s *)\n%s"
 	    ;; (if (= level 1) "\n" "")
-	    (make-string level ?*) text contents)))
+	    (make-string level ?*) text
+	    (replace-regexp-in-string "" contents))))
 
 (defun org-export-coq-paragraph (paragraph contents info)
   (let* ((parent (org-export-get-parent-element paragraph))
 	 (ptype (org-element-type parent)))
     (if (memq ptype '(special-block)) contents
-      (format "(** \n%s *)" contents))))
+      (format "(** %s *)" (replace-regexp-in-string "\n$" "" contents)))))
 
 (defun org-export-coq-src-block (src-block contents info)
   (let ((lang (org-element-property :language src-block))
@@ -134,7 +132,7 @@ Use utf-8 as the default value."
 	;;   "(* *)\n"
 	;;   code
 	;;   "(* *)")
-      (format "(**\n<<\n%s>>\n*)" code))))
+      (format "(** <<\n%s>>\n*)" code))))
 
 (defun org-export-coq-inline-src-block (inline-src-block contents info)
   (let ((code (org-element-property :value inline-src-block)))

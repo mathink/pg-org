@@ -12,9 +12,19 @@ h2 {
     border-bottom: 3px solid #99a;
 }
 
+div.doc {
+    padding: 10px 0 10px 0px;
+    
+}
+
+div.paragraph {
+    display: none;
+}
+
 /* code */
 div.code {
-    margin: 5px 0px;
+    margin: 5px 0px 10px 30px;
+    padding: 10px;
 
     font-family: "Ricty",monospace;
     background-color: #eef;
@@ -30,28 +40,40 @@ span.id[type="keyword"] {
 
 
 /* goal */
-div.goal, div.command {
-    margin: 0 0 0 100px;
-    padding: 10px;
-    
+div.example {
     font-family: "Ricty",monospace;
-    background-color: #cce;
 }
 
-div.goal span.name, div.goal span.name {
-    font-weight: bold;
-}
-
-div.goal pre, div.command pre {
+div.example pre {
     padding: 8px 16px;
     border-top: 1px dashed #336;
     border-bottom: 1px dashed #336;
 }
 
-div.goal:hover pre, div.command:hover pre {
-			/* padding: 0; */
-			/* margin: 8px 0; */
-			/* display: block; */
-			/* background-color: transparent; */
+div.example[type="result"] {
+    margin: 0 0 0 50%;
+    padding: 10px;
+    
+    background-color: #ccc;
+}
+
+/*
+div.example[type="result"] pre {
+    display: none;
+}
+
+div.example[type="result"]:hover pre {
+    display: block;
+}
+*/
+
+div.example[type="command"] {
+    margin: 0 0 0 30px;
+    padding: 10px;
+    
+    background-color: #cce;
+}
+
+div.example[type="command"] span.name {
 }
 
