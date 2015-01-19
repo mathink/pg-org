@@ -1,0 +1,57 @@
+/* headers */
+h1 {
+    padding: 3px 0 3px 12px;
+    
+    border-left: 12px solid #99a;
+    border-bottom: 3px solid #99a;
+}
+
+h2 {
+    padding: 3px 0 3px 8px;
+
+    border-bottom: 3px solid #99a;
+}
+
+/* code */
+div.code {
+    margin: 5px 0px;
+
+    font-family: "Ricty",monospace;
+    background-color: #eef;
+}
+
+span.id[type="record"] {
+    font-weight: bold;
+}
+span.id[type="keyword"] {
+    color: #33c;
+    /* font-weight: bold; */
+}
+
+
+/* goal */
+div.goal, div.command {
+    margin: 0 0 0 100px;
+    padding: 10px;
+    
+    font-family: "Ricty",monospace;
+    background-color: #cce;
+}
+
+div.goal span.name, div.goal span.name {
+    font-weight: bold;
+}
+
+div.goal pre, div.command pre {
+    padding: 8px 16px;
+    border-top: 1px dashed #336;
+    border-bottom: 1px dashed #336;
+}
+
+div.goal:hover pre, div.command:hover pre {
+			/* padding: 0; */
+			/* margin: 8px 0; */
+			/* display: block; */
+			/* background-color: transparent; */
+}
+

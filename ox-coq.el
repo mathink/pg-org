@@ -8,12 +8,18 @@
 (defun org-coq-cons (p)
   (cons p (intern (concat "org-export-coq-" (symbol-name p)))))
 
+(setq org-structure-template-alist
+      (append
+       '(("coq" "#+BEGIN_SRC coq\n?\n#+END_SRC" "<src lang=\"coq\">\n?\n</src>")
+	 ("goal" "#+BEGIN_GOAL\n?\n#+END_GOAL" "<goal>\n?\n</goal>"))
+       org-structure-template-alist))
+
 (org-export-define-backend
     'coqdoc
   (mapcar
    #'org-coq-cons
    '(bold code example-block
-	  verbatim headline latex-fragment plain-text
+	  verbatim headline latex-environment latex-fragment plain-text special-block
 	  paragraph src-block inline-src-block section template))
   ;; '(
   ;;    (bold . org-export-coq-bold)
@@ -57,7 +63,6 @@ Use utf-8 as the default value."
 
 (defun org-export-coq-template (contents info)
   (concat
-
    (org-export-coq-doc-info info)
    contents))
 
@@ -80,12 +85,29 @@ Use utf-8 as the default value."
 (defun org-export-coq-code (code contents info)
   (format "%s" (org-element-property :value code)))
 
+;; (defun org-export-coq-example-block (example-block contents info)
+;;   (let ((text (org-element-property :value example-block))
+;; 	(attrs (org-export-read-attribute :attr_coq example-block)))
+;;     (format "(** \n<<\n%s>>\n*)" text)))
+
 (defun org-export-coq-example-block (example-block contents info)
-  (let ((text (org-element-property :value example-block)))
-    (format "(**\n<<\n%s>>\n*)" text)))
+  (let* ((text (org-element-property :value example-block))
+	 (attrs (org-export-read-attribute :attr_coq example-block))
+	 (name (plist-get attrs :name))
+	 (type (plist-get attrs :type)))
+    (cond ((or (string= type "goal")
+	       (string= type "command"))
+	   (format "(** #<div class=\"%s\">%s#\n<<\n%s>>\n#</div># *)"
+		   type
+		   (if name (format "\n<span class=\"name\">%s [>>]</span>" name) "")
+		   text))
+	  (t (format "(** \n<<\n%s>>\n*)" text)))))
 
 (defun org-export-coq-verbatim (verbatim contents info)
-  (format "\[%s\]" (org-element-property :value verbatim)))
+  (let* ((parent (org-export-get-parent-element verbatim))
+	 (ptype (org-element-type parent)))
+    (if (memq ptype '(special-block)) contents
+      (format "\[%s\]" (org-element-property :value verbatim)))))
 
 (defun org-export-coq-headline (headline contents info)
   (let ((level (org-export-get-relative-level headline info))
@@ -95,7 +117,10 @@ Use utf-8 as the default value."
 	    (make-string level ?*) text contents)))
 
 (defun org-export-coq-paragraph (paragraph contents info)
-  (format "(** \n%s *)" contents))
+  (let* ((parent (org-export-get-parent-element paragraph))
+	 (ptype (org-element-type parent)))
+    (if (memq ptype '(special-block)) contents
+      (format "(** \n%s *)" contents))))
 
 (defun org-export-coq-src-block (src-block contents info)
   (let ((lang (org-element-property :language src-block))
@@ -115,6 +140,20 @@ Use utf-8 as the default value."
   (let ((code (org-element-property :value inline-src-block)))
     (format "[%s]" code)))
 
+(defun org-export-coq-special-block (special-block contents info)
+  (let* ((block-name (org-element-property :name special-block))
+	 (block-type (downcase (org-element-property :type special-block)))
+	 (contents (or contents ""))
+	 (attrs (org-export-read-attribute :attr_coq special-block)))
+    (format "(** %s#<div class=\"%s\">%s#\n<<\n%s\n>>\n#</div># *)"
+	    (if attrs attrs "")
+	    block-type
+	    (if block-name (format "\n<span class=\"name\">%s [>>]</span>" block-name) "")
+	    contents
+	    )))
+
+(defun org-export-coq-latex-environment (latex-environment contents info)
+  (format "(** $ %s $ *)" contents))
 (defun org-export-coq-plain-text (text info)
   text)
 
@@ -155,6 +194,5 @@ Use utf-8 as the default value."
   (org-export-to-buffer 'coqdoc "*Org Coq Export*"
     async subtreep visible-only body-only ext-plist
     (lambda () (coq-mode))))
-
 
 (provide 'ox-coq)

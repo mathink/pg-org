@@ -32,12 +32,23 @@
 
 (defvar po:update-point 1)
 
-(defun po:insert-string (string)
+(defvar po:string-type-alist
+  '((command . "command")
+    (goal . "goal")
+    (result . "result")))
+
+(cl-defun po:insert-string (string &optional (name nil) (type 'command))
   (insert "\n")
   (org-cycle)
-  (insert "#+BEGIN_EXAMPLE\n")
-  (insert string)
-  (insert "#+END_EXAMPLE")
+  (let* ((tstr (or (cdr (assoc type po:string-type-alist)) "command"))
+	 (astr (format "#+ATTR_COQ:%s%s\n"
+		       (if name (concat " :name " name) "")
+		       (concat " :type " tstr))))
+    (insert astr)
+    (org-cycle)
+    (insert "#+BEGIN_EXAMPLE\n")
+    (insert string)
+    (insert "#+END_EXAMPLE"))
   (org-cycle)
   (insert "\n")
   (org-cycle))
@@ -73,11 +84,13 @@
 ;; --------------------------------
 ;;  computation result, subgoal, and other commands result
 
-(defun po:insert-result ()
-  (interactive)
+(cl-defun po:insert-result (name)
+  (interactive "sBlock name: ")
   (when proof-shell-last-output
     (po:insert-string
-     (proof-shell-strip-output-markup proof-shell-last-output))))
+     (proof-shell-strip-output-markup proof-shell-last-output)
+     (if (string= name "") nil name)
+     'result)))
 
 (defun po:insert-goal ()
   (interactive)
@@ -86,16 +99,17 @@
 	   (string-to-number
 	    (coq-first-word-before "focused\\|subgoal")))))
     (if (= num 1)
-	(po:insert-cmd-result "Show.")
+	(po:insert-string (proof-shell-invisible-cmd-get-result "Show.") "all subgoals" 'goal)
       (command-execute 'po:insert-subgoal))))
 
 (defun po:insert-subgoal (num)
   (interactive "nShow goal number: ")
-  (po:insert-cmd-result (format "Show %d." num)))
+  (po:insert-string (proof-shell-invisible-cmd-get-result (format "Show %d." num))
+		    (format "subgoal %d" num) 'goal))
 
 (defun po:insert-cmd-result (cmd)
   (interactive "sCommand: ")
-  (po:insert-string (proof-shell-invisible-cmd-get-result cmd)))
+  (po:insert-string (proof-shell-invisible-cmd-get-result cmd) cmd 'command))
 
 ;; 
 ;;  fundamental?
@@ -178,3 +192,13 @@
         (goto-char (point-max))
         (when eval-p
 	  (proof-goto-point))))))
+
+
+
+;;
+;; Additional components for org-mode
+;; --------------------------------
+;;  Easy-Template,
+
+
+

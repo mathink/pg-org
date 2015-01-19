@@ -31,4 +31,8 @@
 
 ** 関数とか
 
-   
+* Org Easy Template
+
+  =org-structure-template-alist= の docstring を見ろと言われた。
+  
+  
