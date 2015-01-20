@@ -10,8 +10,7 @@
 
 (setq org-structure-template-alist
       (append
-       '(("coq" "#+BEGIN_SRC coq\n?\n#+END_SRC" "<src lang=\"coq\">\n?\n</src>")
-	 ("goal" "#+BEGIN_GOAL\n?\n#+END_GOAL" "<goal>\n?\n</goal>"))
+       '(("coq" "#+BEGIN_SRC coq\n?\n#+END_SRC" "<src lang=\"coq\">\n?\n</src>"))
        org-structure-template-alist))
 
 (org-export-define-backend
@@ -21,16 +20,6 @@
    '(bold code example-block
 	  verbatim headline latex-environment latex-fragment plain-text special-block
 	  paragraph src-block inline-src-block section template))
-  ;; '(
-  ;;    (bold . org-export-coq-bold)
-  ;;    (code . org-export-coq-code)
-  ;;    (headline . org-export-coq-headline)
-  ;;    (latex-fragment . org-export-coq-latex-fragment)
-  ;;    (paragraph . org-export-coq-paragraph)
-  ;;    (src-block . org-export-coq-src-block)
-  ;;    (section . org-export-coq-section)
-  ;;    (template . org-export-coq-template)
-  ;;    )
   :export-block "COQDOC"
   :menu-entry
   '(?v "Export to Coq Script"
@@ -94,10 +83,6 @@ Use utf-8 as the default value."
 		   type
 		   (if name (format "\n<span class=\"name\">%s</span>" name) "")
 		   text)
-    ;; (cond ((or (string= type "goal")
-    ;; 	       (string= type "command"))
-    ;; 	   )
-    ;; 	  (t (format "(** \n<<\n%s>>\n*)" text)))
     ))
 
 (defun org-export-coq-verbatim (verbatim contents info)
@@ -110,15 +95,16 @@ Use utf-8 as the default value."
   (let ((level (org-export-get-relative-level headline info))
 	(text (org-export-data (org-element-property :title headline) info)))
     (format "(** %s %s *)\n%s"
-	    ;; (if (= level 1) "\n" "")
 	    (make-string level ?*) text
-	    (replace-regexp-in-string "" contents))))
+	    (replace-regexp-in-string "^
+$" "" contents))))
 
 (defun org-export-coq-paragraph (paragraph contents info)
   (let* ((parent (org-export-get-parent-element paragraph))
 	 (ptype (org-element-type parent)))
     (if (memq ptype '(special-block)) contents
-      (format "(** %s *)" (replace-regexp-in-string "\n$" "" contents)))))
+      (format "(** %s *)" (replace-regexp-in-string "
+$" "" contents)))))
 
 (defun org-export-coq-src-block (src-block contents info)
   (let ((lang (org-element-property :language src-block))

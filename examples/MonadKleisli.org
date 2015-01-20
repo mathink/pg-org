@@ -1,7 +1,7 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
 #+DATE: 2015/1/20 0:33:49
-#+OPTIONS: LaTeX: t
+#+OPTIONS: 
 
 モナドとKleisli triple の「等価性」を示そう。
 
@@ -48,6 +48,10 @@
     Coercion obj: Category >-> Sortclass.
   #+END_SRC
 
+   #+BEGIN_SRC coq
+     Ltac equation_Category := rewrite ?comp_assoc ?comp_id_dom ?comp_id_cod.
+   #+END_SRC
+
 ** 函手
 
    $F$ = $\langle F_O, F_A \rangle$
@@ -71,6 +75,10 @@
     Notation "'Fmap_comp' F" := (fmap_comp (Functor:=F)) (at level 5).
     Notation "'Fmap_id F" := (fmap_id (Functor:=F)) (at level 5).
   #+END_SRC
+
+   #+BEGIN_SRC coq
+     Ltac equation_Functor := equation_Category; rewrite ?fmap_comp ?fmap_id.
+   #+END_SRC
 
 *** 合成函手
     #+BEGIN_SRC coq
@@ -103,8 +111,10 @@ subgoal 2 (ID 31) is:
     
     #+BEGIN_SRC coq
       Proof.
-        { move=> *; rewrite !fmap_comp //. }
-        { move=> *; rewrite !fmap_id //. }
+        (* { move=> *; rewrite !fmap_comp //. } *)
+        (* { move=> *; rewrite !fmap_id //. } *)
+        { by move=> * //; repeat equation_Functor. }
+        { by move=> * //; repeat equation_Functor. }
       Defined.
     #+END_SRC
 
@@ -155,6 +165,7 @@ subgoal 2 (ID 93) is:
      Coercion natrans: Natrans >-> Funclass.
      Notation "'Naturality' S" := (naturality (Natrans:=S)) (at level 5).
    #+END_SRC
+   
 ** モナド
    #+BEGIN_SRC coq
      Class Monad {C: Category}(T: Functor C C): Type :=
@@ -181,6 +192,10 @@ subgoal 2 (ID 93) is:
      Notation "'Mu_mu' m" := (mu_mu (Monad:=m)) (at level 5).
    #+END_SRC
 
+   #+BEGIN_SRC coq
+     Ltac equation_Monad := equation_Functor; rewrite ?mu_eta_T ?mu_T_eta.
+   #+END_SRC
+
 ** Kleisli triple
    #+BEGIN_SRC coq
      Class Kleisli {C: Category}(T: C -> C): Type :=
@@ -202,12 +217,16 @@ subgoal 2 (ID 93) is:
        }.
    #+END_SRC
 
-* 証明
+   #+BEGIN_SRC coq
+     Ltac equation_Kleisli := equation_Monad; rewrite ?bind_bind ?bind_ret ?ret_bind.
+   #+END_SRC
 
+* 証明
+  =Monad= $\leftrightarrow$ =Kleisli=
 ** モナドから Kleisli triple を作る
 
    #+BEGIN_SRC coq
-     Instance KT_from_Monad {C: Category}{T: Functor C C}(m: Monad T): Kleisli T :=
+     Instance Monad_KT {C: Category}{T: Functor C C}(m: Monad T): Kleisli T :=
        {
          bind X Y f := mu Y \o Fmap T f;
          ret X := eta X
@@ -455,14 +474,16 @@ Mu_eta_T m
 ** Kleisli triple からモナドを作る
 
    #+BEGIN_SRC coq
+     Ltac auto_Kleisli := move=> * //=; repeat equation_Kleisli.
      Instance KT_F {C: Category}{T: C -> C}(k: Kleisli T): Functor C C :=
        {
          fmap X Y f := bind (ret \o f)
        }.
      Proof.
-       { move=> X Y Z f g /=.
-           by rewrite bind_bind !comp_assoc ret_bind //. }
-       { by move=> X; rewrite comp_id_dom; apply: bind_ret. }
+       by auto_Kleisli.
+       by auto_Kleisli.
+       (* { by move=> X Y Z f g /=; rewrite bind_bind !comp_assoc ret_bind //. } *)
+       (* { by move=> X; rewrite comp_id_dom; apply: bind_ret. } *)
      Defined.
 
      Instance KT_eta {C: Category}{T: C -> C}(k: Kleisli T): Natrans (id_F C) (KT_F k) :=
@@ -470,7 +491,8 @@ Mu_eta_T m
          natrans X := ret (X:=X)
        }.
      Proof.
-         by move=> X Y f /=; rewrite ret_bind.
+       by auto_Kleisli.
+         (* by move=> X Y f /=; rewrite ret_bind. *)
      Defined.
 
      Instance KT_mu {C: Category}{T: C -> C}(k: Kleisli T): Natrans (comp_F (KT_F k) (KT_F k)) (KT_F k) :=
@@ -478,6 +500,86 @@ Mu_eta_T m
          natrans X := bind (id (T X))
        }.
      Proof.
-         by move=> X Y f /=; rewrite !bind_bind !comp_assoc ret_bind comp_id_cod comp_id_dom.
+       by auto_Kleisli.
+         (* by move=> X Y f /=; rewrite !bind_bind !comp_assoc ret_bind comp_id_cod comp_id_dom. *)
+     Defined.
+   #+end_src
+   
+   #+begin_src coq
+     Instance KT_Monad {C: Category}{T: C -> C}(k: Kleisli T): Monad (KT_F k) :=
+       {
+         eta := KT_eta k;
+         mu := KT_mu k
+       }.
+     Proof.
+       by auto_Kleisli.
+       by auto_Kleisli.
+       by auto_Kleisli.
+       (* { move=> X /=. *)
+       (*     by apply: ret_bind. } *)
+       (* { move=> X /=. *)
+       (*     by rewrite bind_bind comp_assoc ret_bind comp_id_cod; apply: bind_ret. } *)
+       (* { move=> X /=. *)
+       (*     by rewrite !bind_bind !comp_assoc ret_bind comp_id_dom comp_id_cod. } *)
+     Defined.
+   #+end_src
+
+** Kleisli Category
+
+   #+begin_src coq
+     Lemma mmeq_Mu {C: Category}{T: Functor C C}(m: Monad T):
+       forall X: C, Mu m X = KT_mu (Monad_KT m) X.
+     Proof.
+       by auto_Kleisli.
+         (* by move=> X /=; rewrite fmap_id comp_id_dom. *)
+     Qed.
+
+     Lemma mmeq_Eta {C: Category}{T: Functor C C}(m: Monad T):
+       forall X: C, Eta m X = KT_eta (Monad_KT m) X.
+     Proof.
+         by [].
+     Qed.
+
+     Lemma mmeq_F_fmap {C: Category}{T: Functor C C}(m: Monad T):
+       forall (X Y: C)(f: hom X Y), Fmap T f = Fmap (KT_F (Monad_KT m)) f.
+     Proof.
+       by auto_Kleisli.
+       (* move=> X Y f /=. *)
+       (*   by rewrite fmap_comp comp_assoc mu_T_eta comp_id_cod. *)
+     Qed.
+
+     Instance Kl {C: Category}{T: C -> C}(k: Kleisli T): Category :=
+       {
+         obj := C;
+         hom X Y := hom X (T Y);
+         comp X Y Z f g := bind g \o f;
+         id X := ret 
+       }.
+     Proof.
+       by auto_Kleisli.
+       by auto_Kleisli.
+       by auto_Kleisli.
+       (* { by move=> *; rewrite comp_assoc bind_bind. } *)
+       (* { by move=> *; apply: ret_bind. } *)
+       (* { by move=> *; rewrite bind_ret comp_id_cod. } *)
+     Defined.
+
+     Ltac auto_as_kleisli m :=
+       let H := fresh "kl" in
+       move=> * /=; rewrite ?(mmeq_Mu m) ?(mmeq_Eta m) ?(mmeq_F_fmap m); remember (Monad_KT m) as H;
+              auto_Kleisli.
+
+     Instance Kl_M {C: Category}{T: Functor C C}(m: Monad T): Category :=
+       {
+         obj := C;
+         hom X Y := hom X (T Y);
+         comp X Y Z f g := Mu m Z \o Fmap T g \o f;
+         id X := Eta m X
+       }.
+     Proof.
+       by auto_as_kleisli m.
+       by auto_as_kleisli m.
+       by auto_as_kleisli m.
      Defined.
    #+END_SRC
+
