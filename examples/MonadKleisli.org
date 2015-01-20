@@ -1,7 +1,6 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/20 0:33:49
-#+OPTIONS: 
+#+DATE: 2015/1/20 23:57:34
 
 モナドとKleisli triple の「等価性」を示そう。
 
@@ -13,6 +12,19 @@
   Require Ssreflect.ssreflect.
   Import ssreflect.SsrSyntax.
 #+END_SRC
+
+全体的な流れは
+- 数学的な定義
+  - 見覚えありそうな感じ
+- Coq に於ける定義
+  - つまり形式的な定義。
+    - 読みやすさは意識 *したい*
+- 数学的な命題記述
+  - パッと見わかりやすそうに
+    - 適宜、情報の省略もしたりするかも
+- Coq に於ける命題記述
+  - なるべく複雑には書きたくないけど
+という感じ(リストのテストなので適当)
 
 * 定義群とか
 
@@ -28,10 +40,15 @@
       {
         obj: Type;
         hom: obj -> obj -> Type;
-        comp: forall {X Y Z: obj}, hom X Y -> hom Y Z -> hom X Z
-        where "g \o f" := (comp f g);
+        comp: forall {X Y Z: obj}, hom X Y -> hom Y Z -> hom X Z where "g \o f" := (comp f g);
         id: forall (X: obj),  hom X X;
+  #+end_src
+  
+   - $\forall f,g,h.\; h \circ (g \circ f) = (h \circ g) \circ f$
+   - $\forall f.\; f \circ id = f$
+   - $\forall f.\; id \circ f = f$
 
+  #+begin_src coq
         comp_assoc:
           forall (X Y Z W: obj)(f: hom X Y)(g: hom Y Z)(h: hom Z W),
             h \o (g \o f) = (h \o g) \o f;

@@ -19,6 +19,7 @@
    #'org-coq-cons
    '(bold code example-block
 	  verbatim headline latex-environment latex-fragment plain-text special-block
+	  plain-list item inner-template
 	  paragraph src-block inline-src-block section template))
   :export-block "COQDOC"
   :menu-entry
@@ -50,9 +51,19 @@ Use utf-8 as the default value."
 ;; Transcoders
 ;;
 
+
 (defun org-export-coq-template (contents info)
   (concat
    (org-export-coq-doc-info info)
+   contents))
+
+(defun org-export-coq-inner-template (contents info)
+  ;; (message (prin1
+  ;; 	    (mapconcat
+  ;; 	     #'(lambda (headline)
+  ;; 		 (org-export-get-relative-level headline info))
+  ;; 	     (org-export-collect-headlines info 2))))
+  (concat
    contents))
 
 (defun org-export-coq-doc-info (info)
@@ -102,7 +113,7 @@ $" "" contents))))
 (defun org-export-coq-paragraph (paragraph contents info)
   (let* ((parent (org-export-get-parent-element paragraph))
 	 (ptype (org-element-type parent)))
-    (if (memq ptype '(special-block)) contents
+    (if (memq ptype '(special-block item)) contents
       (format "(** %s *)" (replace-regexp-in-string "
 $" "" contents)))))
 
@@ -132,14 +143,39 @@ $" "" contents)))))
     (format "(** %s#<div class=\"%s\">%s#\n<<\n%s\n>>\n#</div># *)"
 	    (if attrs attrs "")
 	    block-type
-	    (if block-name (format "\n<span class=\"name\">%s [>>]</span>" block-name) "")
+	    (if block-name (format "\n<span class=\"name\">%s </span>" block-name) "")
 	    contents
 	    )))
 
 (defun org-export-coq-latex-environment (latex-environment contents info)
-  (format "(** $ %s $ *)" contents))
+  (let ((code (org-element-property :value latex-environment)))
+    (format "(** #<div class=\"latex\" keyword=\"env\">#\n$$\n%s$$\n#</div># *)" code)))
+
+(defun org-export-coq-latex-fragment (latex-fragment contents info)
+  (let ((latex-frag (org-element-property :value latex-fragment)))
+    (format "$%s$" latex-frag)))
+
 (defun org-export-coq-plain-text (text info)
   text)
+
+(defun org-export-coq-plain-list (plain-list contents info)
+  (let* ((parent (org-export-get-parent-element plain-list))
+	 (in-p (progn
+		 (while (and parent (not (eq (org-element-type parent) 'item)))
+		   (setq parent (org-export-get-parent-element parent)))
+		 (and parent (eq (org-element-type parent) 'item)))))
+    (if in-p (format "%s"  contents)
+     (format "(**\n%s*)" contents))))
+
+(defun org-export-coq-item (item contents info)
+  (let* ((parent (org-export-get-parent-element item))
+	 (nest 0))
+    (while parent
+      (message "%d" nest)
+      (when (eq (org-element-type parent) 'item)
+	(setq nest (+ 1 nest)))
+      (setq parent (org-export-get-parent-element parent)))
+    (format "%s- %s" (make-string nest ? ) contents)))
 
 (defun org-export-coq-section (section contents info)
   (let ((parent (org-export-get-parent-headline section)))
@@ -151,10 +187,6 @@ $" "" contents)))))
 		    (org-export-get-headline-number parent info) "-"))))
 	(format "%s" contents)
 	))))
-
-(defun org-export-coq-latex-fragment (latex-fragment contents info)
-  (let ((latex-frag (org-element-property :value latex-fragment)))
-    (format "$%s$" latex-frag)))
 
 (defun org-export-coq-almost (almost contents info)
   contents)
