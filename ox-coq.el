@@ -58,25 +58,13 @@ Use utf-8 as the default value."
    contents))
 
 (defun org-export-coq-inner-template (contents info)
-  ;; (message (prin1
-  ;; 	    (mapconcat
-  ;; 	     #'(lambda (headline)
-  ;; 		 (org-export-get-relative-level headline info))
-  ;; 	     (org-export-collect-headlines info 2))))
   (concat
    contents))
 
 (defun org-export-coq-doc-info (info)
   (format "(* authored by: %s *)\n"
-	  (and (plist-get info :with-author)
-	       (let ((auth (plist-get info :author)))
-	  	 (and auth
-	  	      ;; Return raw Org syntax, skipping non
-	  	      ;; exportable objects.
-	  	      (org-element-interpret-data
-	  	       (org-element-map auth
-	  		   (cons 'plain-text org-element-all-objects)
-	  		 'identity info)))))))
+	  (if (plist-get info :with-author)
+	      (car (plist-get info :author)) "")))
 
 
 (defun org-export-coq-bold (bold contents info)
