@@ -13,7 +13,7 @@ h2 {
 }
 
 div.doc {
-    padding: 10px 0 10px 0px;
+    padding: 10px 0 10px 20px;
     
 }
 
@@ -27,18 +27,32 @@ div.code {
     padding: 10px;
 
     font-family: "Ricty",monospace;
-    background-color: #eef;
+    background-color: #ddf;
 }
 
 span.id[type="record"] {
     font-weight: bold;
 }
 span.id[type="keyword"] {
-    color: #33c;
+    color: blue;
     /* font-weight: bold; */
 }
-
-
+span.id[type="var"] {
+}
+span.inlinecodenm {
+    padding: 1px 3px;
+    font-family: "Ricty",monospace;
+    background-color: #ddf;
+}
+a.idref {
+    color: #960;
+    text-decoration: none;
+}
+a.idref:hover {
+    color: #ca3;
+    text-decoration: none;
+    background-color: #eef;
+}
 /* goal */
 div.example {
     font-family: "Ricty",monospace;

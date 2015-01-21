@@ -1,8 +1,9 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/20 23:57:34
+#+DATE: 2015/1/21 23:28:31
 
-モナドとKleisli triple の「等価性」を示そう。
+モナドとKleisli triple の「等価性」を示します。
+フルスクラッチで。
 
 #+BEGIN_SRC coq
   Set Implicit Arguments.
@@ -28,9 +29,16 @@
 
 * 定義群とか
 
-  使うものの定義。
+  モナドと Kleisli triple (以下 K.t.) の間にある「等価性」を論じるにあたって必要な道具を定義していきます。
+  定義する構造は、
+  - 圏
+  - 函手
+  - 自然変換
+  - モナド
+  - Kleisli triple
+  の五つです。函手については、合成函手と恒等函手も与えます。
 
-** 圏
+** 圏(category)
 
    $C$ = $\langle O, A, \circ, id \rangle$
 
@@ -50,16 +58,13 @@
 
   #+begin_src coq
         comp_assoc:
-          forall (X Y Z W: obj)(f: hom X Y)(g: hom Y Z)(h: hom Z W),
-            h \o (g \o f) = (h \o g) \o f;
+          forall (X Y Z W: obj)(f: hom X Y)(g: hom Y Z)(h: hom Z W), h \o (g \o f) = (h \o g) \o f;
 
         comp_id_dom:
-          forall (X Y: obj)(f: hom X Y),
-            f \o (id X) = f;
+          forall (X Y: obj)(f: hom X Y), f \o (id X) = f;
         
         comp_id_cod:
-          forall (X Y: obj)(f: hom X Y),
-            (id Y) \o f = f
+          forall (X Y: obj)(f: hom X Y), (id Y) \o f = f
       }.
     Notation "g \o f" := (comp f g) (at level 60, right associativity).
     Coercion obj: Category >-> Sortclass.
@@ -69,29 +74,51 @@
      Ltac equation_Category := rewrite ?comp_assoc ?comp_id_dom ?comp_id_cod.
    #+END_SRC
 
-** 函手
+** 函手(functor)
 
-   $F$ = $\langle F_O, F_A \rangle$
-  #+BEGIN_SRC coq
-    Class Functor (C D: Category): Type :=
-      {
-        fobj: C -> D;
-        fmap: forall {X Y: C}, hom X Y -> hom (fobj X) (fobj Y);
+   函手は二つの圏の間の「変換」であり、対象間の変換と射間の変換の二つの要素から構成されています。
 
-        fmap_comp:
-          forall (X Y Z: C)(f: hom X Y)(g: hom Y Z),
-            fmap (g \o f) = fmap g \o fmap f;
+   $F = \langle F_O, F_A \rangle$
+   #+BEGIN_SRC coq
+     Class Functor (C D: Category): Type :=
+       {
+         fobj: C -> D;
+         fmap: forall {X Y: C}, hom X Y -> hom (fobj X) (fobj Y);
+   #+end_src
+  
+   函手が満たすべき等式は以下の二つです。
+   - $\forall f,g.\;F_A(g\circ f) = F_Ag\circ F_Af$
+   - $\forall X\in C.\; F_A(id_X) = id_{F_OX}$
 
-        fmap_id:
-          forall (X: C),
-            fmap (id X) = id (fobj X)
-      }.
-    Coercion fobj: Functor >-> Funclass.
-    Notation "'Fobj' F" := (fobj (Functor:=F)) (at level 5).
-    Notation "'Fmap' F" := (fmap (Functor:=F)) (at level 5).
-    Notation "'Fmap_comp' F" := (fmap_comp (Functor:=F)) (at level 5).
-    Notation "'Fmap_id F" := (fmap_id (Functor:=F)) (at level 5).
-  #+END_SRC
+   #+begin_src coq
+         fmap_comp:
+           forall (X Y Z: C)(f: hom X Y)(g: hom Y Z), fmap (g \o f) = fmap g \o fmap f;
+
+         fmap_id:
+           forall (X: C), fmap (id X) = id (fobj X)
+       }.
+   #+end_src
+      射関数が射の合成という構造、そして恒等射という性質を保存することを意味しています。
+
+   #+begin_src coq
+     Coercion fobj: Functor >-> Funclass.
+   #+end_src
+
+   函手 =F: Functor C D= が与えられたときは、この =F= で対象関数も表現することにします。
+   普通だと射関数も =F= で書くことは多いのですが、 Coq だと上手く行きません。
+   どちらも =Funclass= への coercion なので曖昧性が出てしまうからです。
+
+   以降の記法は各種性質を使って証明を行なったりするときに、
+   具体的にどのインスタンスを使うのかを指定するためのものです。
+   型クラスは本来こういう指定をせずとも使えるようにするのが目的の一つでもあるのですが、
+  どうも圏論をやっているとインスタンスの推論に失敗する場面が多いので、こういう策を用意することにしました。
+
+   #+begin_src coq
+     Notation "'Fobj' F" := (fobj (Functor:=F)) (at level 5).
+     Notation "'Fmap' F" := (fmap (Functor:=F)) (at level 5).
+     Notation "'Fmap_comp' F" := (fmap_comp (Functor:=F)) (at level 5).
+     Notation "'Fmap_id F" := (fmap_id (Functor:=F)) (at level 5).
+   #+END_SRC
 
    #+BEGIN_SRC coq
      Ltac equation_Functor := equation_Category; rewrite ?fmap_comp ?fmap_id.
@@ -166,7 +193,7 @@ subgoal 2 (ID 93) is:
       Defined.
     #+END_SRC
 
-** 自然変換
+** 自然変換(natrans)
    
    $S: F \Rightarrow G$ = $\{ S_X:F X \rightarrow G X \mid X \in C \}$
 
@@ -183,7 +210,7 @@ subgoal 2 (ID 93) is:
      Notation "'Naturality' S" := (naturality (Natrans:=S)) (at level 5).
    #+END_SRC
    
-** モナド
+** モナド(monad)
    #+BEGIN_SRC coq
      Class Monad {C: Category}(T: Functor C C): Type :=
        {
@@ -237,6 +264,7 @@ subgoal 2 (ID 93) is:
    #+BEGIN_SRC coq
      Ltac equation_Kleisli := equation_Monad; rewrite ?bind_bind ?bind_ret ?ret_bind.
    #+END_SRC
+
 
 * 証明
   =Monad= $\leftrightarrow$ =Kleisli=
@@ -540,63 +568,4 @@ Mu_eta_T m
        (*     by rewrite !bind_bind !comp_assoc ret_bind comp_id_dom comp_id_cod. } *)
      Defined.
    #+end_src
-
-** Kleisli Category
-
-   #+begin_src coq
-     Lemma mmeq_Mu {C: Category}{T: Functor C C}(m: Monad T):
-       forall X: C, Mu m X = KT_mu (Monad_KT m) X.
-     Proof.
-       by auto_Kleisli.
-         (* by move=> X /=; rewrite fmap_id comp_id_dom. *)
-     Qed.
-
-     Lemma mmeq_Eta {C: Category}{T: Functor C C}(m: Monad T):
-       forall X: C, Eta m X = KT_eta (Monad_KT m) X.
-     Proof.
-         by [].
-     Qed.
-
-     Lemma mmeq_F_fmap {C: Category}{T: Functor C C}(m: Monad T):
-       forall (X Y: C)(f: hom X Y), Fmap T f = Fmap (KT_F (Monad_KT m)) f.
-     Proof.
-       by auto_Kleisli.
-       (* move=> X Y f /=. *)
-       (*   by rewrite fmap_comp comp_assoc mu_T_eta comp_id_cod. *)
-     Qed.
-
-     Instance Kl {C: Category}{T: C -> C}(k: Kleisli T): Category :=
-       {
-         obj := C;
-         hom X Y := hom X (T Y);
-         comp X Y Z f g := bind g \o f;
-         id X := ret 
-       }.
-     Proof.
-       by auto_Kleisli.
-       by auto_Kleisli.
-       by auto_Kleisli.
-       (* { by move=> *; rewrite comp_assoc bind_bind. } *)
-       (* { by move=> *; apply: ret_bind. } *)
-       (* { by move=> *; rewrite bind_ret comp_id_cod. } *)
-     Defined.
-
-     Ltac auto_as_kleisli m :=
-       let H := fresh "kl" in
-       move=> * /=; rewrite ?(mmeq_Mu m) ?(mmeq_Eta m) ?(mmeq_F_fmap m); remember (Monad_KT m) as H;
-              auto_Kleisli.
-
-     Instance Kl_M {C: Category}{T: Functor C C}(m: Monad T): Category :=
-       {
-         obj := C;
-         hom X Y := hom X (T Y);
-         comp X Y Z f g := Mu m Z \o Fmap T g \o f;
-         id X := Eta m X
-       }.
-     Proof.
-       by auto_as_kleisli m.
-       by auto_as_kleisli m.
-       by auto_as_kleisli m.
-     Defined.
-   #+END_SRC
 

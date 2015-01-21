@@ -54,17 +54,25 @@ Use utf-8 as the default value."
 
 (defun org-export-coq-template (contents info)
   (concat
+   ;; (org-export-coq-title info)
+   "(** "
    (org-export-coq-doc-info info)
-   contents))
+   contents
+   "*)"))
 
 (defun org-export-coq-inner-template (contents info)
   (concat
    contents))
 
+(defun org-export-coq-title (info)
+  (let ((fname (file-name-sans-extension
+		(file-name-nondirectory (buffer-file-name)))))
+    (format "(** * %s : %s *)\n" fname (car (plist-get info :title)))))
+
 (defun org-export-coq-doc-info (info)
-  (format "(* authored by: %s *)\n"
-	  (if (plist-get info :with-author)
-	      (car (plist-get info :author)) "")))
+  (format "* %s\n authored by: %s\n"
+	  (car (plist-get info :title))
+	  (car (plist-get info :author))))
 
 
 (defun org-export-coq-bold (bold contents info)
@@ -78,7 +86,7 @@ Use utf-8 as the default value."
 	 (attrs (org-export-read-attribute :attr_coq example-block))
 	 (name (plist-get attrs :name))
 	 (type (plist-get attrs :type)))
-    (format "(** #<div class=\"example\" type=\"%s\">%s#\n<<\n%s>>\n#</div># *)"
+    (format "#<div class=\"example\" type=\"%s\">%s#\n<<\n%s>>\n#</div>#"
 		   type
 		   (if name (format "\n<span class=\"name\">%s</span>" name) "")
 		   text)
@@ -93,7 +101,7 @@ Use utf-8 as the default value."
 (defun org-export-coq-headline (headline contents info)
   (let ((level (org-export-get-relative-level headline info))
 	(text (org-export-data (org-element-property :title headline) info)))
-    (format "(** %s %s *)\n%s"
+    (format "%s %s\n%s"
 	    (make-string level ?*) text
 	    (replace-regexp-in-string "^
 $" "" contents))))
@@ -102,7 +110,7 @@ $" "" contents))))
   (let* ((parent (org-export-get-parent-element paragraph))
 	 (ptype (org-element-type parent)))
     (if (memq ptype '(special-block item)) contents
-      (format "(** %s *)" (replace-regexp-in-string "
+      (format "%s" (replace-regexp-in-string "
 $" "" contents)))))
 
 (defun org-export-coq-src-block (src-block contents info)
@@ -112,12 +120,12 @@ $" "" contents)))))
 	;; (code (car (org-export-format-code-default src-block info)))
 	)
     (if (string= "coq" lang)
-	code
-	;; (concat
-	;;   "(* *)\n"
-	;;   code
-	;;   "(* *)")
-      (format "(** <<\n%s>>\n*)" code))))
+	;; code
+	(concat
+	  "*)\n"
+	  code
+	  "(** ")
+      (format "<<\n%s>>\n" code))))
 
 (defun org-export-coq-inline-src-block (inline-src-block contents info)
   (let ((code (org-element-property :value inline-src-block)))
@@ -128,7 +136,7 @@ $" "" contents)))))
 	 (block-type (downcase (org-element-property :type special-block)))
 	 (contents (or contents ""))
 	 (attrs (org-export-read-attribute :attr_coq special-block)))
-    (format "(** %s#<div class=\"%s\">%s#\n<<\n%s\n>>\n#</div># *)"
+    (format "%s#<div class=\"%s\">%s#\n<<\n%s\n>>\n#</div>#"
 	    (if attrs attrs "")
 	    block-type
 	    (if block-name (format "\n<span class=\"name\">%s </span>" block-name) "")
@@ -137,7 +145,7 @@ $" "" contents)))))
 
 (defun org-export-coq-latex-environment (latex-environment contents info)
   (let ((code (org-element-property :value latex-environment)))
-    (format "(** #<div class=\"latex\" keyword=\"env\">#\n$$\n%s$$\n#</div># *)" code)))
+    (format "#<div class=\"latex\" keyword=\"env\">#\n$$\n%s$$\n#</div>#" code)))
 
 (defun org-export-coq-latex-fragment (latex-fragment contents info)
   (let ((latex-frag (org-element-property :value latex-fragment)))
@@ -153,13 +161,12 @@ $" "" contents)))))
 		   (setq parent (org-export-get-parent-element parent)))
 		 (and parent (eq (org-element-type parent) 'item)))))
     (if in-p (format "%s"  contents)
-     (format "(**\n%s*)" contents))))
+     (format "%s" contents))))
 
 (defun org-export-coq-item (item contents info)
   (let* ((parent (org-export-get-parent-element item))
 	 (nest 0))
     (while parent
-      (message "%d" nest)
       (when (eq (org-element-type parent) 'item)
 	(setq nest (+ 1 nest)))
       (setq parent (org-export-get-parent-element parent)))
