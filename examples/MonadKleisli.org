@@ -1,31 +1,22 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/21 23:28:31
-
-モナドとKleisli triple の「等価性」を示します。
-フルスクラッチで。
+#+DATE: 2015/1/22 20:29:25
 
 #+BEGIN_SRC coq
   Set Implicit Arguments.
   Unset Strict Implicit.
   Set Reversible Pattern Implicit.
+#+end_src
 
+モナドとKleisli triple の「等価性」を示します。
+
+#+begin_src coq
   Require Ssreflect.ssreflect.
   Import ssreflect.SsrSyntax.
 #+END_SRC
 
-全体的な流れは
-- 数学的な定義
-  - 見覚えありそうな感じ
-- Coq に於ける定義
-  - つまり形式的な定義。
-    - 読みやすさは意識 *したい*
-- 数学的な命題記述
-  - パッと見わかりやすそうに
-    - 適宜、情報の省略もしたりするかも
-- Coq に於ける命題記述
-  - なるべく複雑には書きたくないけど
-という感じ(リストのテストなので適当)
+証明モードでの記述には [[http://ssr.msr-inria.inria.fr/][SSReflect]] を使っていますが、
+特に凝ったことはしていないので、使ったことがなくても読めると思います。
 
 * 定義群とか
 
@@ -38,10 +29,11 @@
   - Kleisli triple
   の五つです。函手については、合成函手と恒等函手も与えます。
 
-** 圏(category)
+** TODO 圏(category)
 
-   $C$ = $\langle O, A, \circ, id \rangle$
-
+   集合論的な意味での圏ではなく「メタ圏」を Coq 上に翻訳したもの、という説明がよいでしょうか。
+   今回は「集合」の代わりに =Type= を利用した形になります[fn::射はいきなり hom =Type= を与えているので正確なアナロジーではないのですが。]。
+  
   #+BEGIN_SRC coq
     Reserved Notation "g \o f" (at level 60, right associativity).
     Class Category: Type :=
@@ -74,7 +66,7 @@
      Ltac equation_Category := rewrite ?comp_assoc ?comp_id_dom ?comp_id_cod.
    #+END_SRC
 
-** 函手(functor)
+** TODO 函手(functor)
 
    函手は二つの圏の間の「変換」であり、対象間の変換と射間の変換の二つの要素から構成されています。
 
@@ -104,13 +96,13 @@
      Coercion fobj: Functor >-> Funclass.
    #+end_src
 
-   函手 =F: Functor C D= が与えられたときは、この =F= で対象関数も表現することにします。
+      函手 =F: Functor C D= が与えられたとき Coercion を使ってこの =F= で対象関数も表現することにします。
    普通だと射関数も =F= で書くことは多いのですが、 Coq だと上手く行きません。
    どちらも =Funclass= への coercion なので曖昧性が出てしまうからです。
-
+   
    以降の記法は各種性質を使って証明を行なったりするときに、
    具体的にどのインスタンスを使うのかを指定するためのものです。
-   型クラスは本来こういう指定をせずとも使えるようにするのが目的の一つでもあるのですが、
+   型クラスは本来こういう指定をせずとも各フィールドを使えるようにするのが目的の一つでもあるのですが、
   どうも圏論をやっているとインスタンスの推論に失敗する場面が多いので、こういう策を用意することにしました。
 
    #+begin_src coq
@@ -125,6 +117,9 @@
    #+END_SRC
 
 *** 合成函手
+
+    モナドの定義には合成函手が出てきます。
+    二つの函手でパラメタライズされた =Functor= のインスタンスという形で、合成函手を定義します。
     #+BEGIN_SRC coq
       Instance comp_F {C D E: Category}
                (F: Functor C D)(G: Functor D E): Functor C E :=
@@ -133,7 +128,8 @@
           fmap X Y f := Fmap G (Fmap F f)
         }.
     #+END_SRC
-    
+
+    函手であるというためには二つの等式を満たす必要があるので、その証明も必要です。
     #+ATTR_COQ: :name subgoals :type result
     #+BEGIN_EXAMPLE
 2 subgoals, subgoal 1 (ID 30)
@@ -153,6 +149,8 @@ subgoal 2 (ID 31) is:
 (dependent evars:)
     #+END_EXAMPLE
     
+    射の合成の保存、恒等射の保存、どちらも合成函手の元になる函手の性質を利用すれば証明はすぐに終わります。
+    
     #+BEGIN_SRC coq
       Proof.
         (* { move=> *; rewrite !fmap_comp //. } *)
@@ -163,6 +161,8 @@ subgoal 2 (ID 31) is:
     #+END_SRC
 
 *** 恒等函手
+
+    次に恒等函手を定義します。対象も射もそのままで。
     #+BEGIN_SRC coq
       Instance id_F (C: Category): Functor C C :=
         {
@@ -171,7 +171,7 @@ subgoal 2 (ID 31) is:
         }.
     #+END_SRC
     
-    
+    合成函手同様に証明が必要ですが、これこそまさに自明といったところです。
     #+ATTR_COQ: :name subgoals :type result
     #+BEGIN_EXAMPLE
 2 subgoals, subgoal 1 (ID 92)
@@ -193,7 +193,7 @@ subgoal 2 (ID 93) is:
       Defined.
     #+END_SRC
 
-** 自然変換(natrans)
+** TODO 自然変換(natrans)
    
    $S: F \Rightarrow G$ = $\{ S_X:F X \rightarrow G X \mid X \in C \}$
 
@@ -210,7 +210,7 @@ subgoal 2 (ID 93) is:
      Notation "'Naturality' S" := (naturality (Natrans:=S)) (at level 5).
    #+END_SRC
    
-** モナド(monad)
+** TODO モナド(monad)
    #+BEGIN_SRC coq
      Class Monad {C: Category}(T: Functor C C): Type :=
        {
@@ -240,7 +240,7 @@ subgoal 2 (ID 93) is:
      Ltac equation_Monad := equation_Functor; rewrite ?mu_eta_T ?mu_T_eta.
    #+END_SRC
 
-** Kleisli triple
+** TODO Kleisli triple
    #+BEGIN_SRC coq
      Class Kleisli {C: Category}(T: C -> C): Type :=
        {
@@ -266,7 +266,7 @@ subgoal 2 (ID 93) is:
    #+END_SRC
 
 
-* 証明
+* TODO 証明
   =Monad= $\leftrightarrow$ =Kleisli=
 ** モナドから Kleisli triple を作る
 
