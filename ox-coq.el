@@ -70,7 +70,7 @@ Use utf-8 as the default value."
     (format "(** * %s : %s *)\n" fname (car (plist-get info :title)))))
 
 (defun org-export-coq-doc-info (info)
-  (format "* %s"
+  (format "* %s *)\n(** "
 	  (car (plist-get info :title))
 	  ;; (car (plist-get info :author))
 	  ))

@@ -22,6 +22,12 @@
 
 <div class="doc">
 <a name="lab1"></a><h1 class="section">モナドと Kleisli Triple</h1>
+ 注意!
+本稿で定義されている Kleisli triple は Haskell の Monad よりも抽象的です。
+Haskell の Monad とより近づけるためにはベースとなる圏を具体化する必要があります。
+
+<div class="paragraph"> </div>
+
 
 </div>
 <div class="code">
@@ -33,6 +39,8 @@
 <div class="doc">
 
 <div class="paragraph"> </div>
+
+<a name="lab2"></a><h1 class="section">概要</h1>
 
 モナドとKleisli triple の「等価性」を示します。
 
@@ -54,7 +62,7 @@
 
 <div class="paragraph"> </div>
 
-<a name="lab2"></a><h1 class="section">定義群とか</h1>
+<a name="lab3"></a><h1 class="section">定義群とか</h1>
 
 モナドと Kleisli triple (以下 K.t.) の間にある「等価性」を論じるにあたって必要な道具を定義していきます。
 定義する構造は、
@@ -82,7 +90,7 @@
 
 <div class="paragraph"> </div>
 
-<a name="lab3"></a><h2 class="section">圏(category)</h2>
+<a name="lab4"></a><h2 class="section">圏(category)</h2>
 
 集合論的な意味での圏ではなく「メタ圏」を Coq 上に翻訳したもの、という説明がよいでしょうか。
 今回は「集合」の代わりに <span class="inlinecodenm"><span class="id" type="keyword">Type</span></span> を利用した形になります。
@@ -146,7 +154,7 @@
 
 <div class="paragraph"> </div>
 
-<a name="lab4"></a><h2 class="section">函手(functor)</h2>
+<a name="lab5"></a><h2 class="section">函手(functor)</h2>
 
 函手は二つの圏の間の「変換」であり、対象間の変換と射間の変換の二つの要素から構成されています。
 
@@ -243,7 +251,7 @@ $F = \langle F_O, F_A \rangle$
 
 <div class="paragraph"> </div>
 
-<a name="lab5"></a><h3 class="section">合成函手</h3>
+<a name="lab6"></a><h3 class="section">合成函手</h3>
 
 モナドの定義には合成函手が出てきます。
 二つの函手でパラメタライズされた <span class="inlinecodenm"><span class="id" type="var">Functor</span></span> のインスタンスという形で、合成函手を定義します。
@@ -303,7 +311,7 @@ subgoal 2 (ID 31) is:
 
 <div class="paragraph"> </div>
 
-<a name="lab6"></a><h3 class="section">恒等函手</h3>
+<a name="lab7"></a><h3 class="section">恒等函手</h3>
 
 次に恒等函手を定義します。対象も射もそのままで。
 
@@ -352,7 +360,7 @@ subgoal 2 (ID 93) is:
 
 <div class="paragraph"> </div>
 
-<a name="lab7"></a><h2 class="section">自然変換(natrans)</h2>
+<a name="lab8"></a><h2 class="section">自然変換(natrans)</h2>
 
 $S: F \Rightarrow G$ = $\{ S_X:F X \rightarrow G X \mid X \in C \}$
 
@@ -377,7 +385,7 @@ $S: F \Rightarrow G$ = $\{ S_X:F X \rightarrow G X \mid X \in C \}$
 
 <div class="paragraph"> </div>
 
-<a name="lab8"></a><h2 class="section">モナド(monad)</h2>
+<a name="lab9"></a><h2 class="section">モナド(monad)</h2>
 
 
 </div>
@@ -420,7 +428,7 @@ $S: F \Rightarrow G$ = $\{ S_X:F X \rightarrow G X \mid X \in C \}$
 
 <div class="paragraph"> </div>
 
-<a name="lab9"></a><h2 class="section">Kleisli triple</h2>
+<a name="lab10"></a><h2 class="section">Kleisli triple</h2>
 
 
 </div>
@@ -458,10 +466,20 @@ $S: F \Rightarrow G$ = $\{ S_X:F X \rightarrow G X \mid X \in C \}$
 
 <div class="paragraph"> </div>
 
-<a name="lab10"></a><h1 class="section">証明</h1>
+<a name="lab11"></a><h1 class="section">証明</h1>
+
+
+</div>
+<div class="code">
+<span class="id" type="keyword">Axiom</span> <a name="ext_eq"><span class="id" type="axiom">ext_eq</span></a>: <span class="id" type="keyword">∀</span> (<span class="id" type="var">X</span> <span class="id" type="var">Y</span>: <span class="id" type="keyword">Type</span>)(<span class="id" type="var">f</span> <span class="id" type="var">g</span>: <a class="idref" href="MonadKleisli.html#X"><span class="id" type="variable">X</span></a> → <a class="idref" href="MonadKleisli.html#Y"><span class="id" type="variable">Y</span></a>), (<span class="id" type="keyword">∀</span> <span class="id" type="var">x</span>, <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="MonadKleisli.html#x"><span class="id" type="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a> <a class="idref" href="MonadKleisli.html#x"><span class="id" type="variable">x</span></a>) → <a class="idref" href="MonadKleisli.html#f"><span class="id" type="variable">f</span></a> <a class="idref" href="http://coq.inria.fr/distrib/8.4pl5/stdlib/Coq.Init.Logic.html#:type_scope:x_'='_x"><span class="id" type="notation">=</span></a> <a class="idref" href="MonadKleisli.html#g"><span class="id" type="variable">g</span></a>.<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
 
 <span class="inlinecodenm"><span class="id" type="var">Monad</span></span> $\leftrightarrow$ <span class="inlinecodenm"><span class="id" type="var">Kleisli</span></span>
-<a name="lab11"></a><h2 class="section">モナドから Kleisli triple を作る</h2>
+<a name="lab12"></a><h2 class="section">モナドから Kleisli triple を作る</h2>
 
 
 </div>
@@ -511,7 +529,7 @@ subgoal 3 (ID 145) is:
 
 <div class="paragraph"> </div>
 
-<a name="lab12"></a><h3 class="section">規則1</h3>
+<a name="lab13"></a><h3 class="section">規則1</h3>
 
 <div class="example" type="goal">
 <span class="name">bind_ret</span>
@@ -548,7 +566,7 @@ Mu_T_eta m
 
 <div class="paragraph"> </div>
 
-<a name="lab13"></a><h3 class="section">規則2</h3>
+<a name="lab14"></a><h3 class="section">規則2</h3>
 
 <div class="example" type="goal">
 <span class="name">ret_bind</span>
@@ -645,7 +663,7 @@ Mu_eta_T m
 
 <div class="paragraph"> </div>
 
-<a name="lab14"></a><h3 class="section">規則3</h3>
+<a name="lab15"></a><h3 class="section">規則3</h3>
 
 <div class="example" type="goal">
 <span class="name">bind_bind</span>
@@ -818,7 +836,7 @@ Mu_eta_T m
 
 <div class="paragraph"> </div>
 
-<a name="lab15"></a><h2 class="section">Kleisli triple からモナドを作る</h2>
+<a name="lab16"></a><h2 class="section">Kleisli triple からモナドを作る</h2>
 
 
 </div>

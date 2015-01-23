@@ -1,12 +1,18 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/22 20:29:25
+#+DATE: 2015/1/23 19:34:10
+
+注意!
+本稿で定義されている Kleisli triple は Haskell の Monad よりも抽象的です。
+Haskell の Monad とより近づけるためにはベースとなる圏を具体化する必要があります。
 
 #+BEGIN_SRC coq
   Set Implicit Arguments.
   Unset Strict Implicit.
   Set Reversible Pattern Implicit.
 #+end_src
+
+* 概要
 
 モナドとKleisli triple の「等価性」を示します。
 
@@ -267,6 +273,11 @@ subgoal 2 (ID 93) is:
 
 
 * TODO 証明
+
+  #+BEGIN_SRC coq
+    Axiom ext_eq: forall (X Y: Type)(f g: X -> Y), (forall x, f x = g x) -> f = g.
+  #+END_SRC
+
   =Monad= $\leftrightarrow$ =Kleisli=
 ** モナドから Kleisli triple を作る
 
@@ -568,4 +579,3 @@ Mu_eta_T m
        (*     by rewrite !bind_bind !comp_assoc ret_bind comp_id_dom comp_id_cod. } *)
      Defined.
    #+end_src
-
