@@ -29,6 +29,16 @@ div.code {
     font-family: "Ricty",monospace;
     background-color: #ddf;
 }
+.doc .code { 
+    display: inline;
+    font-size: 120%; 
+    color: rgb(30%,30%,70%); 
+    font-family: monospace } 
+
+#main .code:first-child {
+    display: none;
+}
+
 
 span.id[type="record"] {
     font-weight: bold;

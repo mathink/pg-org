@@ -21,6 +21,7 @@
 	  verbatim headline latex-environment latex-fragment plain-text special-block
 	  plain-list item inner-template
 	  paragraph src-block inline-src-block section template))
+  :filters-alist '((:filter-headline . org-coq-filter-headline))
   :export-block "COQDOC"
   :menu-entry
   '(?v "Export to Coq Script"
@@ -46,6 +47,13 @@ Use utf-8 as the default value."
   :version "24.4"
   :package-version '(Org . "8.0")
   :type 'coding-system)
+
+;; --------------------------------
+;; Filters
+;;
+
+(defun org-coq-filter-headline (headline back-end info)
+  (format "%s\n" headline))
 
 ;; --------------------------------
 ;; Transcoders
@@ -103,8 +111,10 @@ Use utf-8 as the default value."
 	(text (org-export-data (org-element-property :title headline) info)))
     (format "%s %s\n%s"
 	    (make-string level ?*) text
-	    (replace-regexp-in-string "^
-$" "" contents))))
+	    ;; (replace-regexp-in-string "^
+	    ;; $" "" contents)
+	    contents
+	    )))
 
 (defun org-export-coq-paragraph (paragraph contents info)
   (let* ((parent (org-export-get-parent-element paragraph))
