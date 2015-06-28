@@ -189,7 +189,7 @@
               (setf buffer-offer-save nil))
             (append-to-buffer c pos (point-max)))))
       (with-current-buffer c
-        (goto-char (point-max))
+        (goto-char (- (point-max) 7))
         (when eval-p
 	  (proof-goto-point))))))
 

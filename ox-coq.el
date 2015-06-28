@@ -5,9 +5,6 @@
 
 (eval-when-compile (require 'cl))
 
-(defun org-coq-cons (p)
-  (cons p (intern (concat "org-export-coq-" (symbol-name p)))))
-
 (setq org-structure-template-alist
       (append
        '(("coq" "#+BEGIN_SRC coq\n?\n#+END_SRC" "<src lang=\"coq\">\n?\n</src>"))
@@ -15,18 +12,30 @@
 
 (org-export-define-backend
     'coqdoc
-  (mapcar
-   #'org-coq-cons
-   '(bold code example-block
-	  verbatim headline latex-environment latex-fragment plain-text special-block
-	  plain-list item inner-template
-	  paragraph src-block inline-src-block section template))
+  '((bold . org-coq-bold)
+    (code . org-coq-code)
+    (example-block . org-coq-example-block)
+    (headline . org-coq-headline)
+    (latex-environment . org-coq-latex-environment)
+    (latex-fragment . org-coq-latex-fragment)
+    (link . org-coq-link)
+    (inline-src-block . org-coq-inline-src-block)
+    (inner-template . org-coq-inner-template)
+    (item . org-coq-item)
+    (paragraph . org-coq-paragraph)
+    (plain-list . org-coq-plain-list)
+    (plain-text . org-coq-plain-text)
+    (section . org-coq-section)
+    (special-block . org-coq-special-block)
+    (src-block . org-coq-src-block)
+    (template . org-coq-template)
+    (verbatim . org-coq-verbatim))
   :export-block "COQDOC"
   :menu-entry
   '(?v "Export to Coq Script"
        (
-	(?v "As Coq file" org-export-coq-to-vernacular)
-	(?V "As Coq Buffer" org-export-coq-to-buffer)
+	(?v "As Coq file" org-coq-to-vernacular)
+	(?V "As Coq Buffer" org-coq-to-buffer)
 	))
   ())
 
@@ -52,37 +61,36 @@ Use utf-8 as the default value."
 ;;
 
 
-(defun org-export-coq-template (contents info)
+(defun org-coq-template (contents info)
   (concat
-   ;; (org-export-coq-title info)
+   ;; (org-coq-title info)
    "(** "
-   (org-export-coq-doc-info info)
+   (org-coq-doc-info info)
    contents
    "*)"))
 
-(defun org-export-coq-inner-template (contents info)
+(defun org-coq-inner-template (contents info)
   (concat
    contents))
 
-(defun org-export-coq-title (info)
+(defun org-coq-title (info)
   (let ((fname (file-name-sans-extension
 		(file-name-nondirectory (buffer-file-name)))))
     (format "(** * %s : %s *)\n" fname (car (plist-get info :title)))))
 
-(defun org-export-coq-doc-info (info)
+(defun org-coq-doc-info (info)
   (format "* %s *)\n(** "
 	  (car (plist-get info :title))
 	  ;; (car (plist-get info :author))
 	  ))
 
-
-(defun org-export-coq-bold (bold contents info)
+(defun org-coq-bold (bold contents info)
   (format "%s" contents))
 
-(defun org-export-coq-code (code contents info)
+(defun org-coq-code (code contents info)
   (format "%s" (org-element-property :value code)))
 
-(defun org-export-coq-example-block (example-block contents info)
+(defun org-coq-example-block (example-block contents info)
   (let* ((text (org-element-property :value example-block))
 	 (attrs (org-export-read-attribute :attr_coq example-block))
 	 (name (plist-get attrs :name))
@@ -93,13 +101,13 @@ Use utf-8 as the default value."
 		   text)
     ))
 
-(defun org-export-coq-verbatim (verbatim contents info)
+(defun org-coq-verbatim (verbatim contents info)
   (let* ((parent (org-export-get-parent-element verbatim))
 	 (ptype (org-element-type parent)))
     (if (memq ptype '(special-block)) contents
       (format "\[%s\]" (org-element-property :value verbatim)))))
 
-(defun org-export-coq-headline (headline contents info)
+(defun org-coq-headline (headline contents info)
   (let ((level (org-export-get-relative-level headline info))
 	(text (org-export-data (org-element-property :title headline) info)))
     (format "%s %s\n%s"
@@ -107,14 +115,14 @@ Use utf-8 as the default value."
 	    (replace-regexp-in-string "^
 $" "" contents))))
 
-(defun org-export-coq-paragraph (paragraph contents info)
+(defun org-coq-paragraph (paragraph contents info)
   (let* ((parent (org-export-get-parent-element paragraph))
 	 (ptype (org-element-type parent)))
     (if (memq ptype '(special-block item)) contents
       (format "%s" (replace-regexp-in-string "
 $" "" contents)))))
 
-(defun org-export-coq-src-block (src-block contents info)
+(defun org-coq-src-block (src-block contents info)
   (let ((lang (org-element-property :language src-block))
 	(caption (org-export-get-caption src-block))
 	(code (car (org-export-unravel-code src-block)))
@@ -128,11 +136,11 @@ $" "" contents)))))
 	  "(** ")
       (format "<<\n%s>>\n" code))))
 
-(defun org-export-coq-inline-src-block (inline-src-block contents info)
+(defun org-coq-inline-src-block (inline-src-block contents info)
   (let ((code (org-element-property :value inline-src-block)))
     (format "[%s]" code)))
 
-(defun org-export-coq-special-block (special-block contents info)
+(defun org-coq-special-block (special-block contents info)
   (let* ((block-name (org-element-property :name special-block))
 	 (block-type (downcase (org-element-property :type special-block)))
 	 (contents (or contents ""))
@@ -144,18 +152,18 @@ $" "" contents)))))
 	    contents
 	    )))
 
-(defun org-export-coq-latex-environment (latex-environment contents info)
+(defun org-coq-latex-environment (latex-environment contents info)
   (let ((code (org-element-property :value latex-environment)))
     (format "#<div class=\"latex\" keyword=\"env\">#\n$$\n%s$$\n#</div>#" code)))
 
-(defun org-export-coq-latex-fragment (latex-fragment contents info)
+(defun org-coq-latex-fragment (latex-fragment contents info)
   (let ((latex-frag (org-element-property :value latex-fragment)))
     (format "$%s$" latex-frag)))
 
-(defun org-export-coq-plain-text (text info)
+(defun org-coq-plain-text (text info)
   text)
 
-(defun org-export-coq-plain-list (plain-list contents info)
+(defun org-coq-plain-list (plain-list contents info)
   (let* ((parent (org-export-get-parent-element plain-list))
 	 (in-p (progn
 		 (while (and parent (not (eq (org-element-type parent) 'item)))
@@ -164,7 +172,7 @@ $" "" contents)))))
     (if in-p (format "%s"  contents)
      (format "%s" contents))))
 
-(defun org-export-coq-item (item contents info)
+(defun org-coq-item (item contents info)
   (let* ((parent (org-export-get-parent-element item))
 	 (nest 0))
     (while parent
@@ -173,7 +181,7 @@ $" "" contents)))))
       (setq parent (org-export-get-parent-element parent)))
     (format "%s- %s" (make-string nest ? ) contents)))
 
-(defun org-export-coq-section (section contents info)
+(defun org-coq-section (section contents info)
   (let ((parent (org-export-get-parent-headline section)))
     (if (not parent) contents
       (let ((section-number
@@ -184,15 +192,24 @@ $" "" contents)))))
 	(format "%s" contents)
 	))))
 
-(defun org-export-coq-almost (almost contents info)
+(defun org-coq-almost (almost contents info)
   contents)
 
+(defun org-coq-link (link desc info)
+  (let* ((type (org-element-property :type link))
+	 (raw-path (org-element-property :path link))
+	 (path (if (member type '("http" "https" "ftp" "mailto"))
+		   (concatenate 'string type ":" raw-path)
+		 raw-path)))
+    (format "#<a href=\"%s\">#%s#</a>#"
+	    (org-link-escape (org-link-unescape path) '(32 34 35))
+	    (if desc desc path))))
 
 ;; --------------------------------
 ;;  Exporter
 ;; 
 
-(defun org-export-coq-to-vernacular (&optional async subtreep visible-only body-only ext-plist)
+(defun org-coq-to-vernacular (&optional async subtreep visible-only body-only ext-plist)
   (interactive)
   (let* ((extension ".v")
 	 (file (org-export-output-file-name extension subtreep))
@@ -201,7 +218,7 @@ $" "" contents)))))
       async subtreep visible-only body-only ext-plist)))
 
 
-(defun org-export-coq-to-buffer (&optional async subtreep visible-only body-only ext-plist)
+(defun org-coq-to-buffer (&optional async subtreep visible-only body-only ext-plist)
   (interactive)
   (org-export-to-buffer 'coqdoc "*Org Coq Export*"
     async subtreep visible-only body-only ext-plist
