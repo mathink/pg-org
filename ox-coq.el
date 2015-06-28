@@ -57,6 +57,13 @@ Use utf-8 as the default value."
   :type 'coding-system)
 
 ;; --------------------------------
+;; Filters
+;;
+
+(defun org-coq-filter-headline (headline back-end info)
+  (format "%s\n" headline))
+
+;; --------------------------------
 ;; Transcoders
 ;;
 
@@ -112,8 +119,10 @@ Use utf-8 as the default value."
 	(text (org-export-data (org-element-property :title headline) info)))
     (format "%s %s\n%s"
 	    (make-string level ?*) text
-	    (replace-regexp-in-string "^
-$" "" contents))))
+	    ;; (replace-regexp-in-string "^
+	    ;; $" "" contents)
+	    contents
+	    )))
 
 (defun org-coq-paragraph (paragraph contents info)
   (let* ((parent (org-export-get-parent-element paragraph))

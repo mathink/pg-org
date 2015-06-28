@@ -1,6 +1,6 @@
 #+TITLE: モナドと Kleisli Triple
 #+AUTHOR: mathink
-#+DATE: 2015/1/23 19:34:10
+#+DATE: 2015/1/29 1:0:34
 
 注意!
 本稿で定義されている Kleisli triple は Haskell の Monad よりも抽象的です。
@@ -579,3 +579,4 @@ Mu_eta_T m
        (*     by rewrite !bind_bind !comp_assoc ret_bind comp_id_dom comp_id_cod. } *)
      Defined.
    #+end_src
+   

@@ -1,6 +1,6 @@
 #+TITLE: Export Example
 #+AUTHOR: SDK
-#+DATE: 2015/1/18 17:31:4
+#+DATE: 2015/6/28 19:49:6
 
 * Section 1
 
@@ -14,6 +14,9 @@
   import Data.List
   #+END_SRC
 
+  - [[file:MonadKleisli.org][Link]]
+  - [[http://www.mathink.net]]
+
 ** Subsection 1
 
    Foo $\langle M, \bullet, \epsilon \rangle$
@@ -24,7 +27,13 @@
          carrier: Type;
          op: carrier -> carrier -> carrier;
          unit: carrier;
+  #+end_src
+  
+   - monad law 1
+   - monad law 2
+   - monad law 3
 
+  #+begin_src coq
          mon1x: forall x, op unit x = x;
          monx1: forall x, op x unit = x;
          monA: forall x y z, op (op x y) z = op x (op y z)
@@ -34,12 +43,14 @@
 
 ** Subsection 2
 
-   bar *buz*
+   bar *buz* [fn::this is foot-note]
 
 * Section 2
 
-  Fire
+  Fire [fn:are]
 
+
+[fn:are] this is second foot-node
 ** Subsection 1
 
    Yoga *日本語の強調はつらい*

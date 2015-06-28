@@ -2,6 +2,15 @@
 #+AUTHOR:
 #+DATE:
 
+* Org Export Reference Documentation のメモ
+  
+  参考:[[http://orgmode.org/worg/dev/org-export-reference.html]]
+
+  
+
+  
+
+
 * Org のエクスポート機能についての覚書
 
   =org-mode/ox.el= がエクスポートのためのフレームワーク。
@@ -23,7 +32,6 @@
 *** LaTeX
 
     =ox-latex.el= で定義されている。 *もちろんでかい。*
-
 
 ** Publishing 機能
 
